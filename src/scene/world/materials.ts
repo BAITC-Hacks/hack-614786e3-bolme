@@ -53,7 +53,7 @@ varying float vDistrictMatch;`,
 diffuseColor.rgb *= vTint;
 // Contact darkening: the first metres of every facade sit in ambient occlusion.
 diffuseColor.rgb *= mix(0.7, 1.0, smoothstep(0.0, 10.0, vHeight));
-diffuseColor.rgb = mix(diffuseColor.rgb, uHighlightColor, vDistrictMatch * uHighlightMix * 0.42);`,
+diffuseColor.rgb = mix(diffuseColor.rgb, uHighlightColor, vDistrictMatch * uHighlightMix * 0.26);`,
       );
   };
   material.customProgramCacheKey = () => "clay-building-v1";
@@ -70,10 +70,10 @@ export function createLayerMaterial(color: string, roughness = 0.95): MeshStanda
 
 export function createWaterMaterial(): MeshStandardMaterial {
   const material = new MeshStandardMaterial({
-    color: "#86a6c3",
-    roughness: 0.2,
+    color: "#93aec6",
+    roughness: 0.24,
     metalness: 0.02,
-    envMapIntensity: 0.75,
+    envMapIntensity: 0.45,
   });
   material.depthTest = false;
   material.depthWrite = false;

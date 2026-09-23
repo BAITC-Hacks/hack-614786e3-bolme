@@ -7,9 +7,11 @@
  */
 import { useFrame, type ThreeEvent } from "@react-three/fiber";
 import { useEffect, useMemo } from "react";
-import { Color, NormalBlending, ShaderMaterial } from "three";
+import { Color, MathUtils, NormalBlending, ShaderMaterial } from "three";
 import { useCityStore, type Hotspot, type HotspotTone } from "@/city/store";
 import { cameraState } from "../camera/cameraState";
+
+const smoothstep = (a: number, b: number, x: number) => MathUtils.smoothstep(x, a, b);
 
 export const TONE_COLORS: Record<HotspotTone, string> = {
   critical: "#ff4a2e",
@@ -99,8 +101,13 @@ function Ripple({ hotspot, index }: { hotspot: Hotspot; index: number }) {
     const u = material.uniforms;
     u.uTime.value += dt;
     u.uHover.value += ((hovered ? 1 : 0) - u.uHover.value) * Math.min(1, dt * 10);
-    // Full strength on the map; quieter once the camera is down in 3D.
-    const wanted = mode === "drone" ? 0.2 : focused ? 0.35 : 0.5 + 0.5 * cameraState.mapness;
+    // Full strength on the map; in 3D only markers near the view centre stay,
+    // so far-away rings are not painted over the skyline.
+    const dx = hotspot.x - cameraState.target.x;
+    const dz = hotspot.z - cameraState.target.z;
+    const near = 1 - smoothstep(hotspot.radius * 2.5, hotspot.radius * 5, Math.hypot(dx, dz));
+    const inView = cameraState.mapness + (1 - cameraState.mapness) * near;
+    const wanted = mode === "drone" ? 0.2 * near : (focused ? 0.35 : 0.5 + 0.5 * cameraState.mapness) * inView;
     u.uOpacity.value += (wanted - u.uOpacity.value) * Math.min(1, dt * 4);
   });
 

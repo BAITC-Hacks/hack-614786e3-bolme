@@ -5,7 +5,7 @@
  * frustum follows the camera focus and is snapped to shadow-map texels so
  * shadows stay stable while the camera moves.
  */
-import { Environment, Lightformer } from "@react-three/drei";
+import { Environment } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import { BackSide, Color, Fog, MathUtils, ShaderMaterial, Vector3, type DirectionalLight, type Mesh } from "three";
@@ -122,7 +122,7 @@ function Sun() {
     <directionalLight
       ref={light}
       color={PALETTE.sun}
-      intensity={2.6}
+      intensity={3.4}
       castShadow
       shadow-mapSize={[SHADOW_MAP, SHADOW_MAP]}
       shadow-bias={-0.00025}
@@ -153,14 +153,15 @@ function Haze() {
 }
 
 export function Atmosphere() {
-  const sunPos = useMemo(() => SUN_DIRECTION.clone().multiplyScalar(60).toArray(), []);
   return (
     <>
       <SkyDome />
       <Haze />
-      <hemisphereLight args={[PALETTE.hemiSky, PALETTE.hemiGround, 0.95]} />
+      <hemisphereLight args={[PALETTE.hemiSky, PALETTE.hemiGround, 0.62]} />
       <Sun />
-      <Environment resolution={256} frames={1} environmentIntensity={0.8}>
+      {/* Sky-only IBL: no sun disc here — image-based light ignores shadow maps
+          and would wash every shadow out. The sun is the directional light. */}
+      <Environment resolution={128} frames={1} environmentIntensity={0.5}>
         <mesh scale={100}>
           <sphereGeometry args={[1, 32, 16]} />
           <shaderMaterial
@@ -174,7 +175,6 @@ export function Atmosphere() {
             }}
           />
         </mesh>
-        <Lightformer form="circle" intensity={8} color="#fff1d6" position={sunPos as [number, number, number]} scale={10} />
       </Environment>
     </>
   );
