@@ -351,9 +351,13 @@ kbd {
 
 .cinema-caption__eyebrow {
   font-size: var(--text-xs);
+  font-weight: 600;
   letter-spacing: 0.3em;
   text-transform: uppercase;
-  color: var(--color-ink-soft);
+  color: var(--color-ink);
+  padding: 3px 10px;
+  border-radius: var(--radius-chip);
+  background: oklch(100% 0 0 / 0.72);
 }
 
 .cinema-caption__title {

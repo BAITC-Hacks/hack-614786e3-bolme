@@ -191,4 +191,4 @@ npm run city:build   # ~2 с → public/city/*.json, trees.bin, manifest.json
 
 ## Что ещё в работе (визуал, не трогай эти файлы без синхронизации)
 
-Параллельно доделываю визуал в `src/scene/world/*`, `src/scene/fx/*`, `src/scene/palette.ts`, `src/scene/markers/*` и `src/scene/camera/*`. Открытые пункты: тени зданий пока почти не видны (разбираюсь со светом), подписи событий на обзоре местами заходят под верхнюю панель, цвет воды и общий контраст ещё подстраиваются. Твоя зона: `src/sim/`, `src/domain/`, `src/ui/`, `src/app/api/` и одна строка подключения слоя в `CityCanvas.tsx`. Правки `src/city/store.ts` согласуй: это общий контракт.
+Визуал дорабатывается параллельно в `src/scene/world/*`, `src/scene/fx/*`, `src/scene/palette.ts`, `src/scene/markers/*` и `src/scene/camera/*`. Уже сделано: тени от солнца, дороги с минимальной экранной шириной на карте, затухание дальних колец в 3D. Твоя зона: `src/sim/`, `src/domain/`, `src/ui/`, `src/app/api/` и одна строка подключения слоя в `CityCanvas.tsx`. Правки `src/city/store.ts` согласуй: это общий контракт.
