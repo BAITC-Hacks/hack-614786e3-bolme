@@ -250,9 +250,19 @@ function Promises({ a }: { a: Analysis }) {
 export function ResultView() {
   const a = useSignedAnalysis();
   const setBriefOpen = useSimStore((s) => s.setBriefOpen);
+  const setDebriefOpen = useSimStore((s) => s.setDebriefOpen);
+  const setRevealStep = useSimStore((s) => s.setRevealStep);
   if (!a) return <div className="sim-block">План недопустим — Score не рассчитывается.</div>;
   return (
     <>
+      <div className="sim-result-actions">
+        <button type="button" className="sim-btn sim-btn--primary sim-btn--small" onClick={() => setDebriefOpen(true)}>
+          Итоговый анализ
+        </button>
+        <button type="button" className="sim-btn sim-btn--small" onClick={() => setRevealStep(0)}>
+          ▶ Повторить облёт
+        </button>
+      </div>
       <ScoreCard a={a} />
       <CriticalChanges a={a} />
       <AiReport a={a} />

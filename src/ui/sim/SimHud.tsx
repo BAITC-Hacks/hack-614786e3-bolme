@@ -6,6 +6,8 @@ import { SimBridge } from "@/sim/SimBridge";
 import { useSimStore } from "@/sim/store";
 import { usePreview } from "@/sim/useAnalysis";
 import { BriefSheet } from "./BriefSheet";
+import { FinalDebrief } from "./FinalDebrief";
+import { Reveal } from "./Reveal";
 import { InfoPanel } from "./InfoPanel";
 import { PlanPanel } from "./PlanPanel";
 
@@ -29,10 +31,13 @@ function MiniBar() {
 /** Simulator UI on top of the city scene (mounted from src/ui/hud/Hud.tsx). */
 export function SimHud() {
   const mode = useCityStore((s) => s.mode);
+  const revealing = useSimStore((s) => s.revealStep >= 0);
   return (
     <>
       <SimBridge />
-      {mode === "map" ? (
+      {revealing ? (
+        <Reveal />
+      ) : mode === "map" ? (
         <>
           <PlanPanel />
           <InfoPanel />
@@ -40,6 +45,7 @@ export function SimHud() {
       ) : (
         <MiniBar />
       )}
+      <FinalDebrief />
       <BriefSheet />
     </>
   );

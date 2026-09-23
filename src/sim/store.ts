@@ -43,6 +43,12 @@ type SimState = {
   /** Printable one-page brief overlay. */
   briefOpen: boolean;
   setBriefOpen: (open: boolean) => void;
+  /** Cinematic reveal after signing: index of the current shot, -1 = not playing. */
+  revealStep: number;
+  setRevealStep: (step: number) => void;
+  /** Full-screen final analysis ("Итоговый анализ"). */
+  debriefOpen: boolean;
+  setDebriefOpen: (open: boolean) => void;
 
   setDistrict: (id: DistrictId) => void;
   addChoice: (choice: Choice) => void;
@@ -74,13 +80,17 @@ export const useSimStore = create<SimState>()((set) => ({
   toast: null,
   briefOpen: false,
   setBriefOpen: (briefOpen) => set({ briefOpen }),
+  revealStep: -1,
+  setRevealStep: (revealStep) => set({ revealStep }),
+  debriefOpen: false,
+  setDebriefOpen: (debriefOpen) => set({ debriefOpen }),
 
   setDistrict: (district) => set({ district }),
   addChoice: (choice) => set((s) => ({ plan: [...s.plan, choice], report: { status: "idle" } })),
   removeChoice: (measureId) =>
     set((s) => ({ plan: s.plan.filter((c) => c.measureId !== measureId), report: { status: "idle" } })),
-  replacePlan: (plan) => set({ plan, phase: "plan", report: { status: "idle" }, responses: {}, ghost: false }),
-  clearPlan: () => set({ plan: [], phase: "plan", report: { status: "idle" }, responses: {}, ghost: false }),
+  replacePlan: (plan) => set({ plan, phase: "plan", report: { status: "idle" }, responses: {}, ghost: false, revealStep: -1, debriefOpen: false }),
+  clearPlan: () => set({ plan: [], phase: "plan", report: { status: "idle" }, responses: {}, ghost: false, revealStep: -1, debriefOpen: false }),
   setAnalyst: (analyst) => set({ analyst }),
   setGhost: (ghost) => set({ ghost }),
   setMod: (key, on) => set((s) => ({ mods: { ...s.mods, [key]: on } })),
@@ -93,8 +103,8 @@ export const useSimStore = create<SimState>()((set) => ({
           : [...s.promiseIds, id],
     })),
   setResponse: (eventId, responseId) => set((s) => ({ responses: { ...s.responses, [eventId]: responseId } })),
-  sign: () => set({ phase: "revealed", report: { status: "idle" }, responses: {}, ghost: false }),
-  edit: () => set({ phase: "plan", ghost: false }),
+  sign: () => set({ phase: "revealed", report: { status: "idle" }, responses: {}, ghost: false, revealStep: 0, debriefOpen: false }),
+  edit: () => set({ phase: "plan", ghost: false, revealStep: -1, debriefOpen: false }),
   setReport: (report) => set({ report }),
   showToast: (text, tone = "error") => set({ toast: { text, tone } }),
   clearToast: () => set({ toast: null }),

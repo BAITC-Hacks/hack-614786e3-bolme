@@ -45,3 +45,8 @@ export function analyzePlan(plan: Choice[], modsInput: ModsInput): { ok: true; a
 }
 
 export const contributionsOf = (a: Analysis) => a.shapley.map((s) => ({ label: choiceLabel(s.choice), value: s.value }));
+
+/** Seed of the social feed: same plan, responses and promises => same reactions (order-independent). */
+export function socialSeed(plan: Choice[], m: Pick<ModsInput, "responses" | "promiseIds">): string {
+  return JSON.stringify({ plan: [...plan].sort((a, b) => a.measureId.localeCompare(b.measureId)), responses: m.responses, promises: [...m.promiseIds].sort() });
+}
