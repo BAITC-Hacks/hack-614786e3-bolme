@@ -8,6 +8,8 @@ import { PALETTE } from "../palette";
 /** Uniforms animated from the render loop. */
 export const sceneUniforms = {
   uTime: { value: 0 },
+  /** World metres per screen pixel at 1 m view distance (2·tan(fov/2) / viewport height). */
+  uPixelScale: { value: 0.001 },
   uHighlight: { value: -1 },
   uHighlightColor: { value: new Color("#ffd27a") },
   uHighlightMix: { value: 0 },
@@ -60,11 +62,35 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uHighlightColor, vDistrictMatch * uHigh
   return material;
 }
 
-/** Flat ground layer: drawn in painter's order on top of the ground plane. */
-export function createLayerMaterial(color: string, roughness = 0.95): MeshStandardMaterial {
+/**
+ * Flat ground layer: drawn in painter's order on top of the ground plane.
+ * With `minPixels`, ribbons carrying `aExpand` never get thinner than that many
+ * screen pixels, so the road network stays readable on the zoomed-out map.
+ */
+export function createLayerMaterial(color: string, roughness = 0.95, minPixels = 0): MeshStandardMaterial {
   const material = new MeshStandardMaterial({ color, roughness, metalness: 0, envMapIntensity: 0.35 });
   material.depthTest = false;
   material.depthWrite = false;
+  if (minPixels > 0) {
+    material.onBeforeCompile = (shader) => {
+      shader.uniforms.uPixelScale = sceneUniforms.uPixelScale;
+      shader.uniforms.uMinHalfPixels = { value: minPixels / 2 };
+      shader.vertexShader = shader.vertexShader
+        .replace("#include <common>", "#include <common>\nattribute vec2 aExpand;\nuniform float uPixelScale;\nuniform float uMinHalfPixels;")
+        .replace(
+          "#include <begin_vertex>",
+          `#include <begin_vertex>
+{
+  vec3 centre = transformed - vec3(aExpand.x, 0.0, aExpand.y);
+  float viewDistance = max(1.0, -(modelViewMatrix * vec4(centre, 1.0)).z);
+  float halfWidth = max(length(aExpand), 1e-3);
+  float grow = max(1.0, uMinHalfPixels * uPixelScale * viewDistance / halfWidth);
+  transformed.xz = centre.xz + aExpand * grow;
+}`,
+        );
+    };
+    material.customProgramCacheKey = () => `layer-min-px-${minPixels}`;
+  }
   return material;
 }
 

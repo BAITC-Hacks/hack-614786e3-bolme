@@ -79,15 +79,30 @@ function miterOffsets(pts: Float32Array, capExtend: number): Offsets | null {
   return { xs, zs, ox, oz, dist };
 }
 
+/**
+ * Extra per-vertex data written by addRibbon, matching the writer's attributes:
+ * `distance` → lineDistance (dashes); `expand` → aExpand, the vec2 from the
+ * centreline to the edge, used by the min-pixel-width shader on roads.
+ */
+export type RibbonExtra = "none" | "distance" | "expand";
+
 /** Flat ribbon at height y. `capExtend` pushes both ends outwards (square caps). */
-export function addRibbon(w: MeshWriter, pts: Float32Array, halfWidth: number, y: number, capExtend = 0): void {
+export function addRibbon(w: MeshWriter, pts: Float32Array, halfWidth: number, y: number, capExtend = 0, extra: RibbonExtra = "distance"): void {
   const o = miterOffsets(pts, capExtend);
   if (!o) return;
   let prevL = -1;
   let prevR = -1;
   for (let i = 0; i < o.xs.length; i++) {
-    const L = w.vertex(o.xs[i] + o.ox[i] * halfWidth, y, o.zs[i] + o.oz[i] * halfWidth, 0, 1, 0, o.dist[i]);
-    const R = w.vertex(o.xs[i] - o.ox[i] * halfWidth, y, o.zs[i] - o.oz[i] * halfWidth, 0, 1, 0, o.dist[i]);
+    const ex = o.ox[i] * halfWidth;
+    const ez = o.oz[i] * halfWidth;
+    const L =
+      extra === "expand"
+        ? w.vertex(o.xs[i] + ex, y, o.zs[i] + ez, 0, 1, 0, ex, ez)
+        : w.vertex(o.xs[i] + ex, y, o.zs[i] + ez, 0, 1, 0, o.dist[i]);
+    const R =
+      extra === "expand"
+        ? w.vertex(o.xs[i] - ex, y, o.zs[i] - ez, 0, 1, 0, -ex, -ez)
+        : w.vertex(o.xs[i] - ex, y, o.zs[i] - ez, 0, 1, 0, o.dist[i]);
     if (i > 0) {
       w.triangle(prevL, R, prevR);
       w.triangle(prevL, L, R);

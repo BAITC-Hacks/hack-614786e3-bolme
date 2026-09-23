@@ -58,11 +58,13 @@ export function buildGroundLayers(data: GroundFile): GroundLayers {
   for (const [kind, w] of areaWriters) if (!w.isEmpty) areas.set(kind, w.toGeometry());
 
   const dist = [{ name: "lineDistance", itemSize: 1, type: "f32" as const }];
+  // Roads keep a minimum on-screen width (see createLayerMaterial minPixels).
+  const expand = [{ name: "aExpand", itemSize: 2, type: "f32" as const }];
   const paths = new MeshWriter();
   const pedestrian = new MeshWriter();
-  const tracks = new MeshWriter();
-  const casing = new MeshWriter();
-  const asphalt = new MeshWriter();
+  const tracks = new MeshWriter(expand);
+  const casing = new MeshWriter(expand);
+  const asphalt = new MeshWriter(expand);
   const markings = new MeshWriter(dist);
   const parapets = new MeshWriter();
 
@@ -80,12 +82,12 @@ export function buildGroundLayers(data: GroundFile): GroundLayers {
       return;
     }
     if (cls === RoadClass.Track) {
-      addRibbon(tracks, pts, half, 0, 0);
+      addRibbon(tracks, pts, half, 0, 0, "expand");
       return;
     }
     const curb = CURB[cls] ?? 0.5;
-    addRibbon(casing, pts, half + curb, 0, half + curb);
-    addRibbon(asphalt, pts, half, 0, half);
+    addRibbon(casing, pts, half + curb, 0, half + curb, "expand");
+    addRibbon(asphalt, pts, half, 0, half, "expand");
     if (cls <= RoadClass.Tertiary && width >= 7.5) addRibbon(markings, pts, 0.16, 0, 0);
     if (flags & RoadFlag.Bridge) {
       const edge = half + curb;
@@ -95,7 +97,7 @@ export function buildGroundLayers(data: GroundFile): GroundLayers {
   });
 
   const railBed = new MeshWriter();
-  const railTrack = new MeshWriter();
+  const railTrack = new MeshWriter(expand);
   const viaduct = new MeshWriter();
   const viaductTrack = new MeshWriter();
   forEachPolyline(data.rails, (i, pts) => {
@@ -103,7 +105,7 @@ export function buildGroundLayers(data: GroundFile): GroundLayers {
     const elevated = kind === RailKind.LightRail && (data.rails.flags[i] & RailFlag.Bridge) !== 0;
     if (!elevated) {
       addRibbon(railBed, pts, 1.9, 0, 0);
-      addRibbon(railTrack, pts, 0.8, 0, 0);
+      addRibbon(railTrack, pts, 0.8, 0, 0, "expand");
       return;
     }
     addWall(viaduct, pts, VIADUCT.halfWidth, VIADUCT.deckBottom, VIADUCT.deckTop, true);

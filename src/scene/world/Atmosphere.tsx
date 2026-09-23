@@ -140,7 +140,9 @@ function Haze() {
       scene.fog = null;
     };
   }, [fog, scene]);
-  useFrame((_, dt) => {
+  useFrame(({ camera, size }, dt) => {
+    const fov = "fov" in camera ? (camera.fov as number) : 40;
+    sceneUniforms.uPixelScale.value = (2 * Math.tan(MathUtils.degToRad(fov) / 2)) / Math.max(1, size.height);
     const d = cameraState.distance;
     const map = cameraState.mapness;
     const near = d * MathUtils.lerp(1.3, 2.2, map) + 700;

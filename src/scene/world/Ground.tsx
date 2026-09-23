@@ -25,12 +25,12 @@ export function Ground({ layers }: { layers: GroundLayers }) {
     }
     flat.push(
       { geometry: layers.paths, material: createLayerMaterial(PALETTE.path), order: LAYER_ORDER.paths },
-      { geometry: layers.tracks, material: createLayerMaterial(PALETTE.track), order: LAYER_ORDER.tracks },
+      { geometry: layers.tracks, material: createLayerMaterial(PALETTE.track, 0.95, 1), order: LAYER_ORDER.tracks },
       { geometry: layers.railBed, material: createLayerMaterial(PALETTE.railBed), order: LAYER_ORDER.railBed },
-      { geometry: layers.railTrack, material: createLayerMaterial(PALETTE.railTrack, 0.6), order: LAYER_ORDER.railTrack },
-      { geometry: layers.casing, material: createLayerMaterial(PALETTE.casing), order: LAYER_ORDER.casing },
+      { geometry: layers.railTrack, material: createLayerMaterial(PALETTE.railTrack, 0.6, 1.2), order: LAYER_ORDER.railTrack },
+      { geometry: layers.casing, material: createLayerMaterial(PALETTE.casing, 0.95, 1.6), order: LAYER_ORDER.casing },
       { geometry: layers.pedestrian, material: createLayerMaterial(PALETTE.pedestrian), order: LAYER_ORDER.pedestrian },
-      { geometry: layers.asphalt, material: createLayerMaterial(PALETTE.asphalt, 0.82), order: LAYER_ORDER.asphalt },
+      { geometry: layers.asphalt, material: createLayerMaterial(PALETTE.asphalt, 0.82, 1.1), order: LAYER_ORDER.asphalt },
       { geometry: layers.markings, material: createMarkingMaterial(), order: LAYER_ORDER.markings },
     );
     const concrete = createSolidMaterial(PALETTE.concrete, 0.85);
