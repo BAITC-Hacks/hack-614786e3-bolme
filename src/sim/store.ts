@@ -8,7 +8,17 @@ import type { Choice, DistrictId, MeasureId } from "@/domain/types";
 import { evaluatePlan, issuesForAdding } from "@/domain/engine";
 import type { ReportPayload } from "./report";
 
-export type Phase = "plan" | "revealed";
+/**
+ * Game stages, strictly in order: world settings → promises (only with the
+ * «Память народа» mod) → the 5 decisions → signed. Mods and the Аким/Аналитик
+ * mode are fixed once the world is created; «Новая игра» starts over.
+ */
+export type Phase = "setup" | "promises" | "plan" | "revealed";
+
+/** Exactly this many promises when the «Память народа» mod is on. */
+export const PROMISE_COUNT = 3;
+
+const DEFAULT_MODS: ModSettings = { emergencies: true, anger: true, promises: true };
 
 export type ModSettings = {
   /** ЧС: authored city emergencies paid from the unused reserve. */
@@ -58,11 +68,21 @@ type SimState = {
   addChoice: (choice: Choice) => void;
   removeChoice: (measureId: MeasureId) => void;
   replacePlan: (plan: Choice[]) => void;
-  clearPlan: () => void;
+  /** Setup stage only. */
   setAnalyst: (on: boolean) => void;
   setGhost: (on: boolean) => void;
+  /** Setup stage only. */
   setMod: (key: keyof ModSettings, on: boolean) => void;
+  /** Promises stage only; at most PROMISE_COUNT. */
   togglePromise: (id: string) => void;
+  /** Setup → promises (mod on) or straight to the plan. */
+  createWorld: () => void;
+  /** Promises → plan, once exactly PROMISE_COUNT are chosen. */
+  confirmPromises: () => void;
+  /** Promises → back to the world settings. */
+  backToSetup: () => void;
+  /** Start over from the world settings. */
+  newGame: () => void;
   setResponse: (eventId: string, responseId: string) => void;
   sign: () => void;
   edit: () => void;
@@ -72,12 +92,12 @@ type SimState = {
 };
 
 export const useSimStore = create<SimState>()((set) => ({
-  phase: "plan",
+  phase: "setup",
   plan: [],
   district: "nura",
   analyst: false,
   ghost: false,
-  mods: { emergencies: true, anger: true, promises: true },
+  mods: DEFAULT_MODS,
   promiseIds: [],
   responses: {},
   report: { status: "idle" },
@@ -98,20 +118,34 @@ export const useSimStore = create<SimState>()((set) => ({
   removeChoice: (measureId) =>
     set((s) => ({ plan: s.plan.filter((c) => c.measureId !== measureId), report: { status: "idle" } })),
   replacePlan: (plan) => set(evaluatePlan(plan).ok ? { plan, phase: "plan", report: { status: "idle" }, responses: {}, ghost: false, revealStep: -1, debriefOpen: false } : {}),
-  clearPlan: () => set({ plan: [], phase: "plan", report: { status: "idle" }, responses: {}, ghost: false, revealStep: -1, debriefOpen: false }),
-  setAnalyst: (analyst) => set({ analyst }),
+  setAnalyst: (analyst) => set((s) => (s.phase === "setup" ? { analyst } : {})),
   setGhost: (ghost) => set({ ghost }),
-  setMod: (key, on) => set((s) => ({ mods: { ...s.mods, [key]: on } })),
+  setMod: (key, on) => set((s) => (s.phase === "setup" ? { mods: { ...s.mods, [key]: on } } : {})),
   togglePromise: (id) =>
-    set((s) => ({
-      promiseIds: s.promiseIds.includes(id)
-        ? s.promiseIds.filter((p) => p !== id)
-        : s.promiseIds.length >= 3
-          ? s.promiseIds
-          : [...s.promiseIds, id],
-    })),
+    set((s) => {
+      if (s.phase !== "promises") return {};
+      if (s.promiseIds.includes(id)) return { promiseIds: s.promiseIds.filter((p) => p !== id) };
+      return s.promiseIds.length >= PROMISE_COUNT ? {} : { promiseIds: [...s.promiseIds, id] };
+    }),
+  createWorld: () =>
+    set((s) => (s.phase !== "setup" ? {} : s.mods.promises ? { phase: "promises" } : { phase: "plan", promiseIds: [] })),
+  confirmPromises: () => set((s) => (s.phase === "promises" && s.promiseIds.length === PROMISE_COUNT ? { phase: "plan" } : {})),
+  backToSetup: () => set((s) => (s.phase === "promises" ? { phase: "setup" } : {})),
+  newGame: () =>
+    set({
+      phase: "setup",
+      plan: [],
+      mods: DEFAULT_MODS,
+      analyst: false,
+      promiseIds: [],
+      responses: {},
+      report: { status: "idle" },
+      ghost: false,
+      revealStep: -1,
+      debriefOpen: false,
+    }),
   setResponse: (eventId, responseId) => set((s) => ({ responses: { ...s.responses, [eventId]: responseId } })),
-  sign: () => set((s) => (evaluatePlan(s.plan).ok ? { phase: "revealed", report: { status: "idle" }, responses: {}, ghost: false, revealStep: 0, debriefOpen: false } : {})),
+  sign: () => set((s) => (s.phase === "plan" && evaluatePlan(s.plan).ok ? { phase: "revealed", report: { status: "idle" }, responses: {}, ghost: false, revealStep: 0, debriefOpen: false } : {})),
   edit: () => set({ phase: "plan", ghost: false, revealStep: -1, debriefOpen: false }),
   setReport: (report) => set({ report }),
   showToast: (text, tone = "error") => set({ toast: { text, tone } }),

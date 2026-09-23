@@ -15,8 +15,7 @@ const FACTS = [
 /** Welcome card over the cinematic flyover. `?nointro` skips it (dev). */
 export function Intro() {
   const stage = useOnboardingStore((s) => s.stage);
-  const startGuide = useOnboardingStore((s) => s.startGuide);
-  const finish = useOnboardingStore((s) => s.finish);
+  const leaveIntro = useOnboardingStore((s) => s.leaveIntro);
   const buildings = useCityStore((s) => s.manifest?.counts.buildings);
 
   useEffect(() => {
@@ -31,11 +30,11 @@ export function Intro() {
   useEffect(() => {
     if (stage !== "intro") return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.code === "Enter") startGuide();
+      if (e.code === "Enter") leaveIntro(true);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [stage, startGuide]);
+  }, [stage, leaveIntro]);
 
   if (stage !== "intro") return null;
   return (
@@ -65,11 +64,11 @@ export function Intro() {
           Точный движок считает Astana Quality of Life Score по формуле кейса, AI-аналитик объясняет результат, но ни одного числа не придумывает.
         </p>
         <div className="intro__actions">
-          <button type="button" className="sim-btn sim-btn--primary intro__start" onClick={startGuide} autoFocus>
-            Показать, как всё устроено
+          <button type="button" className="sim-btn sim-btn--primary intro__start" onClick={() => leaveIntro(true)} autoFocus>
+            Начать с обучением
             <Icon name="arrow" size={16} />
           </button>
-          <button type="button" className="sim-btn sim-btn--ghost" onClick={finish}>
+          <button type="button" className="sim-btn sim-btn--ghost" onClick={() => leaveIntro(false)}>
             Сразу к игре
           </button>
         </div>

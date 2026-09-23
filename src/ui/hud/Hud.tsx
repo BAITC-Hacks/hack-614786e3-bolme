@@ -12,6 +12,7 @@ import { useOnboardingStore } from "@/ui/onboarding/store";
 import { HelpButton, Walkthrough } from "@/ui/onboarding/Walkthrough";
 import { EventsBell } from "@/ui/sim/EventsCard";
 import { FocusActions } from "@/ui/sim/FocusActions";
+import { useSimStore } from "@/sim/store";
 
 const HINTS: Record<ViewMode, string[]> = {
   map: ["Тяни — сдвиг", "Колесо — масштаб", "ПКМ — поворот", "Клик по кругу — пролёт в 3D"],
@@ -119,6 +120,7 @@ export function Hud() {
   const mode = useCityStore((s) => s.mode);
   const status = useCityStore((s) => s.status);
   const intro = useOnboardingStore((s) => s.stage === "intro");
+  const settingUp = useSimStore((s) => s.phase === "setup" || s.phase === "promises");
   if (status !== "ready") return null;
   if (intro)
     return (
@@ -131,12 +133,12 @@ export function Hud() {
       <header className="brand">
         <span className="brand__mark">АКИМ</span>
       </header>
-      <ViewSwitcher />
+      {!settingUp && <ViewSwitcher />}
       <SimHud />
       <FocusCard />
       <LandmarkMenu />
       <Caption />
-      {mode !== "map" && (
+      {mode !== "map" && !settingUp && (
         <footer className="hud-footer">
           <ul className="controls-hint" aria-label="Управление">
             {HINTS[mode].map((h) => (
@@ -145,10 +147,12 @@ export function Hud() {
           </ul>
         </footer>
       )}
-      <div className="top-actions">
-        <EventsBell />
-        <HelpButton />
-      </div>
+      {!settingUp && (
+        <div className="top-actions">
+          <EventsBell />
+          <HelpButton />
+        </div>
+      )}
       <DebugStats />
       <Walkthrough />
     </div>

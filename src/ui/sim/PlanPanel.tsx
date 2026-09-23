@@ -5,9 +5,12 @@ import { BUDGET, DECISIONS, DIRECTIONS, DISTRICTS, HORIZON_QUARTERS, INCOMPATIBI
 import { evaluatePlan, issuesForAdding } from "@/domain/engine";
 import { DIRECTION_IDS, DISTRICT_IDS, MEASURE_IDS, type Choice, type DirectionId, type Measure } from "@/domain/types";
 import { lagText, num, SHORT, signed } from "@/sim/labels";
-import { useSimStore } from "@/sim/store";
+import { useCityStore } from "@/city/store";
+import { useSimStore, type ModSettings } from "@/sim/store";
 import { BASELINE, useGainIfAdded, useGainOf, usePreview } from "@/sim/useAnalysis";
 import { Icon, MEASURE_ICONS } from "@/ui/icons";
+import { checkPromises } from "@/domain/mods";
+import { MOD_INFO } from "./WorldSetup";
 
 /** Analyst mode: live Score of the plan as it is now (not official until signed). */
 function Forecast() {
@@ -40,19 +43,11 @@ function BudgetHeader() {
   const phase = useSimStore((s) => s.phase);
   const plan = useSimStore((s) => s.plan);
   const analyst = useSimStore((s) => s.analyst);
-  const setAnalyst = useSimStore((s) => s.setAnalyst);
   const preview = usePreview();
   const pct = Math.min(100, (preview.cost / BUDGET) * 100);
   return (
     <header className="sim-head">
-      <div className="sim-toggle" role="group" aria-label="Режим отображения" data-tour="mode">
-        <button type="button" aria-pressed={!analyst} onClick={() => setAnalyst(false)} title="Результаты скрыты до подписи бюджета">
-          <Icon name="user" size={16} /> Аким
-        </button>
-        <button type="button" aria-pressed={analyst} onClick={() => setAnalyst(true)} title="Показывать величины эффектов и живой прогноз">
-          <Icon name="chart" size={16} /> Аналитик
-        </button>
-      </div>
+      <WorldRules />
       <div className="sim-head__budget" data-tour="budget">
         <h2 className="sim-head__title">Бюджет города</h2>
         <p className="sim-head__sub">Горизонт: {HORIZON_QUARTERS} кварталов · 2 года</p>
@@ -69,6 +64,61 @@ function BudgetHeader() {
       </div>
       {analyst && phase === "plan" && <Forecast />}
     </header>
+  );
+}
+
+/** The world settings chosen before the game: read-only, changed only by «Новая игра». */
+function WorldRules() {
+  const analyst = useSimStore((s) => s.analyst);
+  const mods = useSimStore((s) => s.mods);
+  const on = (Object.keys(MOD_INFO) as (keyof ModSettings)[]).filter((k) => mods[k]);
+  return (
+    <div className="sim-rules" data-tour="mods" title="Правила мира выбраны перед игрой. Поменять — «Новая игра» после подписи.">
+      <span className="sim-rules__mode" data-tour="mode">
+        <Icon name={analyst ? "chart" : "user"} size={14} /> {analyst ? "Аналитик" : "Аким"}
+      </span>
+      {on.length ? (
+        on.map((k) => (
+          <span key={k} className="sim-rules__mod">
+            <Icon name={MOD_INFO[k].icon} size={12} /> {MOD_INFO[k].short}
+          </span>
+        ))
+      ) : (
+        <span className="sim-rules__mod">Без модов</span>
+      )}
+    </div>
+  );
+}
+
+/** Promises given at the start, pinned above the plan so they shape it. Analyst mode: on track by the forecast. */
+function PinnedPromises() {
+  const promiseIds = useSimStore((s) => s.promiseIds);
+  const plan = useSimStore((s) => s.plan);
+  const analyst = useSimStore((s) => s.analyst);
+  const emergencies = useSimStore((s) => s.mods.emergencies);
+  const preview = usePreview();
+  if (!promiseIds.length) return null;
+  const outcomes = checkPromises(promiseIds, preview, plan, BUDGET - preview.cost);
+  return (
+    <div className="sim-pinned" data-tour="promises">
+      <h3 className="sim-block__title">
+        Ваши обещания <span>проверят через 2 года</span>
+      </h3>
+      <ul>
+        {outcomes.map((o) => {
+          const dependsOnEvents = o.promise.id === "reserve" && emergencies;
+          return (
+            <li key={o.promise.id} className={analyst ? (o.kept ? "is-kept" : "is-risk") : ""}>
+              {analyst && <b aria-hidden>{o.kept ? "✓" : "✗"}</b>}
+              <span>
+                «{o.promise.text}»
+                {analyst && <small>{dependsOnEvents ? `${o.proof} · до реакции на ЧС` : o.proof}</small>}
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
   );
 }
 
@@ -166,15 +216,23 @@ function SignBar() {
   const phase = useSimStore((s) => s.phase);
   const sign = useSimStore((s) => s.sign);
   const edit = useSimStore((s) => s.edit);
-  const clearPlan = useSimStore((s) => s.clearPlan);
+  const newGame = useSimStore((s) => s.newGame);
   if (phase === "revealed")
     return (
       <div className="sim-sign" data-tour="sign">
         <button type="button" className="sim-btn sim-btn--primary" onClick={edit}>
           <Icon name="pencil" size={16} /> Изменить решения
         </button>
-        <button type="button" className="sim-btn" onClick={clearPlan}>
-          <Icon name="plus" size={16} /> Новый план
+        <button
+          type="button"
+          className="sim-btn"
+          onClick={() => {
+            newGame();
+            useCityStore.getState().setMode("tour");
+          }}
+          title="Заново: настройки мира, обещания, план"
+        >
+          <Icon name="plus" size={16} /> Новая игра
         </button>
       </div>
     );
@@ -322,6 +380,7 @@ export function PlanPanel() {
   return (
     <section className="sim-panel sim-panel--left" aria-label="План акима">
       <BudgetHeader />
+      <PinnedPromises />
       <Slots />
       <SignBar />
       {phase === "plan" && <Presets />}

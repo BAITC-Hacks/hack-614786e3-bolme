@@ -1,11 +1,11 @@
 "use client";
 
 import { CRITICAL_THRESHOLD, DISTRICTS, INDICATORS } from "@/domain/data";
-import { baselineAnger, PROMISES } from "@/domain/mods";
+import { baselineAnger } from "@/domain/mods";
 import { DISTRICT_IDS, INDICATOR_IDS } from "@/domain/types";
 import { useCityStore } from "@/city/store";
 import { num, SHORT, signed, valueColor } from "@/sim/labels";
-import { useSimStore, type ModSettings } from "@/sim/store";
+import { useSimStore } from "@/sim/store";
 import { usePreview } from "@/sim/useAnalysis";
 import { EventsCard } from "./EventsCard";
 import { ResultView } from "./ResultView";
@@ -94,50 +94,6 @@ function DistrictView() {
   );
 }
 
-const MOD_INFO: Record<keyof ModSettings, { title: string; text: string }> = {
-  emergencies: { title: "ЧС", text: "Паводок, порыв теплотрассы, смог. Реагировать придётся из остатка бюджета." },
-  anger: { title: "Шкала недовольства", text: "Насколько злы жители каждого района — от проблем, ЧС и нарушенных обещаний." },
-  promises: { title: "Память народа", text: "До подписи дайте до 3 публичных обещаний. Жители запомнят." },
-};
-
-function ModsSetup() {
-  const mods = useSimStore((s) => s.mods);
-  const setMod = useSimStore((s) => s.setMod);
-  const promiseIds = useSimStore((s) => s.promiseIds);
-  const togglePromise = useSimStore((s) => s.togglePromise);
-  return (
-    <div className="sim-block" data-tour="mods">
-      <h3 className="sim-block__title">
-        Моды города <span>не меняют официальный Score</span>
-      </h3>
-      <ul className="sim-mods">
-        {(Object.keys(MOD_INFO) as (keyof ModSettings)[]).map((key) => (
-          <li key={key}>
-            <label className="sim-switch">
-              <input type="checkbox" checked={mods[key]} onChange={(e) => setMod(key, e.target.checked)} />
-              <span className="sim-switch__track" aria-hidden />
-              <span>
-                <b>{MOD_INFO[key].title}</b>
-                <small>{MOD_INFO[key].text}</small>
-              </span>
-            </label>
-          </li>
-        ))}
-      </ul>
-      {mods.promises && (
-        <div className="sim-promises">
-          <span className="sim-eyebrow">Ваши обещания жителям ({promiseIds.length}/3)</span>
-          {PROMISES.map((p) => (
-            <button key={p.id} type="button" className="sim-promise" aria-pressed={promiseIds.includes(p.id)} onClick={() => togglePromise(p.id)}>
-              «{p.text}»
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
 function CityOverview() {
   const preview = usePreview();
   const analyst = useSimStore((s) => s.analyst);
@@ -170,7 +126,6 @@ export function InfoPanel() {
         <>
           <CityOverview />
           <DistrictView />
-          <ModsSetup />
         </>
       ) : (
         <ResultView />

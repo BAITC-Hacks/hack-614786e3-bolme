@@ -10,6 +10,7 @@ import { FinalDebrief } from "./FinalDebrief";
 import { Reveal } from "./Reveal";
 import { InfoPanel } from "./InfoPanel";
 import { PlanPanel } from "./PlanPanel";
+import { WorldSetup } from "./WorldSetup";
 
 function MiniBar() {
   const plan = useSimStore((s) => s.plan);
@@ -33,10 +34,13 @@ export function SimHud() {
   const mode = useCityStore((s) => s.mode);
   const revealing = useSimStore((s) => s.revealStep >= 0);
   const infoOpen = useSimStore((s) => s.infoOpen);
+  const settingUp = useSimStore((s) => s.phase === "setup" || s.phase === "promises");
   return (
     <>
       <SimBridge />
-      {revealing ? (
+      {settingUp ? (
+        <WorldSetup />
+      ) : revealing ? (
         <Reveal />
       ) : mode === "map" ? (
         <>
