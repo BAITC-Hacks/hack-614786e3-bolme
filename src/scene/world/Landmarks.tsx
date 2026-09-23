@@ -19,6 +19,8 @@ import {
 } from "three";
 import type { CityManifest, LandmarkAnchor } from "@/city/schema";
 import { PALETTE } from "../palette";
+import { AstanaArena } from "./landmarks/AstanaArena";
+import { NorthernLights } from "./landmarks/NorthernLights";
 
 const WHITE = "#f3f4f6";
 
@@ -312,6 +314,8 @@ export function Landmarks({ manifest }: { manifest: CityManifest }) {
       {L["ak-orda"] && <AkOrdaCrown a={L["ak-orda"]} m={m} />}
       {L["hazrat-sultan"] && <HazratSultanCrown a={L["hazrat-sultan"]} m={m} />}
       {L["kazakh-eli"] && <KazakhEli a={L["kazakh-eli"]} m={m} />}
+      {L["northern-lights"] && <NorthernLights anchor={L["northern-lights"]} />}
+      {L["astana-arena"] && <AstanaArena anchor={L["astana-arena"]} />}
     </group>
   );
 }
