@@ -6,6 +6,7 @@
 import { buildBuildingChunks, type BuildingChunk, type BuildingStats } from "./geometry/buildings";
 import { buildGroundLayers, type GroundLayers } from "./geometry/ground";
 import { loadCityData } from "./loader";
+import { buildRailNetwork, buildRoadNetwork, type PathNetwork } from "./geometry/traffic";
 import type { CityManifest } from "./schema";
 
 export type PreparedCity = {
@@ -13,6 +14,8 @@ export type PreparedCity = {
   buildingChunks: BuildingChunk[];
   buildingStats: BuildingStats;
   ground: GroundLayers;
+  /** Arterial road and LRT graphs for decorative traffic. */
+  traffic: { roads: PathNetwork; rails: PathNetwork };
 };
 
 export type PrepareProgress = (fraction: number, stage: string) => void;
@@ -42,7 +45,10 @@ async function run(onProgress: PrepareProgress): Promise<PreparedCity> {
   onProgress(0.78, `Возводим ${data.buildings.count.toLocaleString("ru-RU")} зданий`);
   await nextFrame();
   const { chunks, stats } = buildBuildingChunks(data.buildings, BUILDING_CHUNK_SIZE);
-  onProgress(0.96, "Зажигаем солнце");
+  onProgress(0.92, "Выпускаем машины на проспекты");
   await nextFrame();
-  return { manifest: data.manifest, buildingChunks: chunks, buildingStats: stats, ground };
+  const traffic = { roads: buildRoadNetwork(data.ground), rails: buildRailNetwork(data.ground) };
+  onProgress(0.97, "Зажигаем солнце");
+  await nextFrame();
+  return { manifest: data.manifest, buildingChunks: chunks, buildingStats: stats, ground, traffic };
 }

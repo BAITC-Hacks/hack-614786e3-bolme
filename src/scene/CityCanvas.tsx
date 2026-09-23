@@ -13,6 +13,7 @@ import { Atmosphere } from "./world/Atmosphere";
 import { Buildings } from "./world/Buildings";
 import { Ground } from "./world/Ground";
 import { Landmarks } from "./world/Landmarks";
+import { Traffic } from "./world/Traffic";
 import { Trees } from "./world/Trees";
 
 export default function CityCanvas({ city }: { city: PreparedCity }) {
@@ -29,6 +30,7 @@ export default function CityCanvas({ city }: { city: PreparedCity }) {
       <Buildings chunks={city.buildingChunks} />
       <Trees manifest={city.manifest} />
       <Landmarks manifest={city.manifest} />
+      <Traffic roads={city.traffic.roads} rails={city.traffic.rails} />
       <Districts manifest={city.manifest} />
       <Ripples />
       <CameraRig manifest={city.manifest} />
