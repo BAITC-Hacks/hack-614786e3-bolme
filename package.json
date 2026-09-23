@@ -9,7 +9,9 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "city:fetch": "tsx scripts/city/fetch-osm.ts",
-    "city:build": "tsx scripts/city/build-city.ts"
+    "city:build": "tsx scripts/city/build-city.ts",
+    "sim:solve": "tsx scripts/sim/solve.ts",
+    "test": "tsx --test src/domain/*.test.ts"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.8",
