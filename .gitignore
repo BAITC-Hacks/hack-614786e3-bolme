@@ -45,3 +45,6 @@ next-env.d.ts
 
 # raw OpenStreetMap downloads (re-fetched by `npm run city:fetch`)
 /data/osm/
+
+# example env file is committed
+!.env.example

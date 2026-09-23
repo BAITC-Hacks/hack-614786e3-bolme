@@ -6,6 +6,7 @@ import { useCityStore, type ViewMode } from "@/city/store";
 import { TONE_COLORS } from "@/scene/markers/Ripples";
 import { fpsState } from "@/scene/fpsState";
 import { ViewSwitcher } from "./ViewSwitcher";
+import { SimHud } from "@/ui/sim/SimHud";
 
 const HINTS: Record<ViewMode, string[]> = {
   map: ["Тяни — сдвиг", "Колесо — масштаб", "ПКМ — поворот", "Клик по кругу — пролёт в 3D"],
@@ -122,6 +123,7 @@ export function Hud() {
         </span>
       </header>
       <ViewSwitcher />
+      <SimHud />
       <FocusCard />
       <LandmarkMenu />
       <Caption />

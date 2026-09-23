@@ -15,6 +15,7 @@ import { Ground } from "./world/Ground";
 import { Landmarks } from "./world/Landmarks";
 import { Traffic } from "./world/Traffic";
 import { Trees } from "./world/Trees";
+import { SimLayer } from "@/sim/scene/SimLayer";
 
 export default function CityCanvas({ city }: { city: PreparedCity }) {
   return (
@@ -39,6 +40,7 @@ export default function CityCanvas({ city }: { city: PreparedCity }) {
       <FpsProbe />
       <DebugGroundPicker manifest={city.manifest} />
       {/* Simulator objects (ghost buildings, initiatives…) mount here — see docs/city-scene-guide.md */}
+      <SimLayer manifest={city.manifest} />
     </Canvas>
   );
 }

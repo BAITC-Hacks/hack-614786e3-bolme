@@ -9,7 +9,7 @@ const eslintConfig = defineConfig([
     // three.js / react-three-fiber code mutates scene objects (camera, controls,
     // fog, uniforms) inside useFrame by design; the React Compiler immutability
     // rule targets React state and does not apply to these external objects.
-    files: ["src/scene/**/*.{ts,tsx}"],
+    files: ["src/scene/**/*.{ts,tsx}", "src/sim/scene/**/*.{ts,tsx}"],
     rules: { "react-hooks/immutability": "off" },
   },
   // Override default ignores of eslint-config-next.
