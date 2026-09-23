@@ -6,10 +6,15 @@
  * the camera into 3D over that area. Labels live in the DOM (MapLabels).
  */
 import { useFrame, type ThreeEvent } from "@react-three/fiber";
-import { useEffect, useMemo } from "react";
-import { Color, MathUtils, NormalBlending, ShaderMaterial } from "three";
+import { useEffect, useMemo, useRef } from "react";
+import { Color, MathUtils, NormalBlending, ShaderMaterial, type Group } from "three";
 import { useCityStore, type Hotspot, type HotspotTone } from "@/city/store";
 import { cameraState } from "../camera/cameraState";
+import { labelAnchors } from "../labels/anchors";
+import { sceneUniforms } from "../world/materials";
+
+/** On the zoomed-out map a marker never shrinks below this on-screen radius. */
+const MIN_RADIUS_PX = 72;
 
 const smoothstep = (a: number, b: number, x: number) => MathUtils.smoothstep(x, a, b);
 
@@ -47,18 +52,18 @@ void main() {
   // Three waves leave the centre, widen and fade — a stone dropped in water.
   for (int i = 0; i < 3; i++) {
     float p = fract(uTime * 0.3 + uPhase + float(i) / 3.0);
-    float w = 0.02 + 0.025 * p;
+    float w = 0.03 + 0.03 * p;
     float fade = pow(1.0 - p, 1.25) * smoothstep(0.0, 0.08, p);
     bright += band(r, p, w) * fade;
     dark += band(r, p, w * 3.2) * fade;
   }
   // Calm tinted water surface and the boundary of the affected area.
-  float fill = 0.22 * (1.0 - smoothstep(0.1, 1.0, r));
+  float fill = 0.3 * (1.0 - smoothstep(0.1, 1.0, r));
   float rim = 0.7 * band(r, 0.975, 0.012);
   dark += 0.5 * band(r, 0.975, 0.03);
   // Solid core with a white ring.
-  float core = 1.0 - smoothstep(0.045, 0.06, r);
-  float coreRing = band(r, 0.068, 0.012);
+  float core = 1.0 - smoothstep(0.06, 0.078, r);
+  float coreRing = band(r, 0.088, 0.016);
   bright += fill + rim;
   vec3 color = uColor * (1.0 + 0.25 * uHover);
   color = mix(color, vec3(1.0), coreRing);
@@ -96,8 +101,17 @@ function Ripple({ hotspot, index }: { hotspot: Hotspot; index: number }) {
     [hotspot.tone, index],
   );
   useEffect(() => () => material.dispose(), [material]);
+  const group = useRef<Group>(null);
 
   useFrame((_, dt) => {
+    // Keep a readable size on the overview: grow with camera distance.
+    const cam = cameraState.position;
+    const dist = Math.hypot(cam.x - hotspot.x, cam.y, cam.z - hotspot.z);
+    const scale = Math.max(1, (MIN_RADIUS_PX * sceneUniforms.uPixelScale.value * dist) / hotspot.radius);
+    group.current?.scale.set(scale, 1, scale);
+    const label = labelAnchors.get(`hotspot:${hotspot.id}`);
+    if (label) label.z = hotspot.z + hotspot.radius * scale * 1.02;
+
     const u = material.uniforms;
     u.uTime.value += dt;
     u.uHover.value += ((hovered ? 1 : 0) - u.uHover.value) * Math.min(1, dt * 10);
@@ -127,7 +141,7 @@ function Ripple({ hotspot, index }: { hotspot: Hotspot; index: number }) {
   };
 
   return (
-    <group position={[hotspot.x, 0.5, hotspot.z]}>
+    <group ref={group} position={[hotspot.x, 0.5, hotspot.z]}>
       <mesh rotation-x={-Math.PI / 2} material={material} renderOrder={40} frustumCulled={false}>
         <planeGeometry args={[hotspot.radius * 2, hotspot.radius * 2]} />
       </mesh>
