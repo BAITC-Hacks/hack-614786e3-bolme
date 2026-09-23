@@ -45,6 +45,7 @@ export function formatFact(f: Fact): string {
     case "percent":
       return `${n(f.value, 1)}%`;
     case "budget":
+      return `${n(f.value, 0)} ед.`;
     case "count":
     case "quarter":
       return n(f.value, 0);
@@ -79,7 +80,9 @@ export function buildFacts(
   add("cost", "Потрачено бюджета", r.cost, "budget");
   add("remaining", "Остаток бюджета", r.remaining, "budget");
   add("budget", "Бюджет", BUDGET, "budget");
-  add("threshold", "Критический порог показателя", CRITICAL_THRESHOLD, "points");
+  add("threshold", "Критический порог показателя", CRITICAL_THRESHOLD, "count");
+  add("decisions", "Число решений в плане", plan.length, "count");
+  add("horizon", "Горизонт, кварталов", 8, "count");
   add("d_avg", "Средний балл города (по населению)", r.dAvg, "score");
   add("d_min", "Балл самого слабого района", r.dMin, "score");
   add("n_crit", "Критических показателей после плана", r.nCrit, "count");
@@ -158,13 +161,9 @@ export function renderItem(item: ReportItem, facts: Record<string, Fact>): Repor
     return "";
   });
   if (!ok) return null;
-  // Allowed digits outside placeholders: measure / indicator codes, quarters, and small counts (≤ 10).
-  const stripped = withoutPlaceholders
-    .replace(/\bM\d{1,2}\b/g, "")
-    .replace(/\b[TESBC][12]\b/g, "")
-    .replace(/\bQ\d\b/g, "");
-  const numbers = stripped.match(/\d+(?:[.,]\d+)?/g) ?? [];
-  if (numbers.some((n) => Number(n.replace(",", ".")) > 10 || /[.,]/.test(n))) return null;
+  // No raw numbers at all outside placeholders; only measure / indicator codes (M8, S1) may contain digits.
+  const stripped = withoutPlaceholders.replace(/\bM\d{1,2}\b/g, "").replace(/\b[TESBC][12]\b/g, "");
+  if (/\d/.test(stripped)) return null;
   const text = item.text.replace(PLACEHOLDER, (_m, id: string) => formatFact(facts[id]));
   return { text, factIds: [...used].filter((id) => facts[id]) };
 }
@@ -187,10 +186,17 @@ export function offlineReport(plan: Choice[], r: SimulationResult, fc: FactConte
   for (const p of r.criticalPairs)
     risks.push(item(`${INDICATORS[p.indicator].name} в районе ${DISTRICTS[p.districtId].name} остаётся ${v(`${p.districtId}_${p.indicator}_after`)} — ниже порога ${v("threshold")}, это штраф −1 к Score.`, [`${p.districtId}_${p.indicator}_after`, "threshold"]));
   risks.push(item(`Самый слабый район после плана — ${DISTRICTS[r.weakestDistrict].name} (${v(`D_${r.weakestDistrict}_after`)}). От него зависит 30% итоговой оценки.`, [`D_${r.weakestDistrict}_after`]));
-  const slow = plan.filter((c) => MEASURES[c.measureId].lag >= 3);
-  if (slow.length)
-    risks.push(item(`${slow.map((c) => c.measureId).join(", ")} заработают только с квартала ${v(`lag_${slow[0].measureId}`)}: половину горизонта жители эффекта не увидят.`, slow.map((c) => `lag_${c.measureId}`)));
-  if (r.remaining > 0) risks.push(item(`Не распределено ${v("remaining")} единиц бюджета: по правилам остаток не даёт бонуса.`, ["remaining"]));
+  // Lag L: the measure works from quarter L+1, i.e. (8 − L) of 8 quarters, so only (8 − L)/8 of its full effect counts.
+  for (const lag of [...new Set(plan.map((c) => MEASURES[c.measureId].lag))].filter((l) => l >= 3).sort((a, b) => b - a)) {
+    const group = plan.filter((c) => MEASURES[c.measureId].lag === lag);
+    risks.push(
+      item(
+        `${group.map((c) => c.measureId).join(", ")} заработают только с квартала ${v(`lag_${group[0].measureId}`)}: первые ${lag} из 8 кварталов эффекта нет, в итог идёт ${8 - lag}/8 полного эффекта.`,
+        group.map((c) => `lag_${c.measureId}`),
+      ),
+    );
+  }
+  if (r.remaining > 0) risks.push(item(`Не распределено ${v("remaining")} бюджета: по правилам остаток не даёт бонуса.`, ["remaining"]));
 
   const consequences: ReportItem[] = DISTRICT_IDS.filter((d) => r.districtScores[d] - r.baselineDistrictScores[d] > 0.05)
     .sort((a, b) => r.districtScores[b] - r.baselineDistrictScores[b] - (r.districtScores[a] - r.baselineDistrictScores[a]))

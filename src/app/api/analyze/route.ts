@@ -8,9 +8,8 @@
  * dropped. Without OPENAI_API_KEY (or on any model error) the route returns a
  * deterministic report built from the same facts, labelled "offline".
  */
-import { analyzePlan, contributionsOf, type ModsInput } from "@/sim/analysis";
+import { analyzePlan, contributionsOf, parseRequest } from "@/sim/analysis";
 import { offlineReport, renderItem, SECTIONS, type ReportItem, type ReportPayload } from "@/sim/report";
-import type { Choice } from "@/domain/types";
 
 const MODEL = process.env.OPENAI_MODEL ?? "gpt-6-luna";
 const TIMEOUT_MS = 25_000;
@@ -18,7 +17,7 @@ const TIMEOUT_MS = 25_000;
 const INSTRUCTIONS = `Ты — AI-аналитик городского симулятора «Аким на 5 часов» (синтетические данные кейса HackAlem, условные районы Астаны).
 Тебе передают JSON: facts (числа, рассчитанные кодом, с id) и context (план, районы, правила, моды).
 Жёсткие правила:
-1. Никогда не вычисляй и не придумывай числа. Любое число вставляй ТОЛЬКО плейсхолдером {{id}} из facts, например «Score вырос до {{score}}». Цифры можно писать только в кодах мер (M8) и показателей (S1).
+1. Никогда не вычисляй и не придумывай числа. Любое число — даже «5 решений» или «порог 40» — вставляй ТОЛЬКО плейсхолдером {{id}} из facts, например «Score вырос до {{score}}», «из {{decisions}} решений», «ниже порога {{threshold}}». Ставь плейсхолдер рядом со словами, которые точно описывают этот факт (см. label факта). Цифры без плейсхолдера допустимы только в кодах мер (M8) и показателей (S1); пункт с любой другой цифрой будет отброшен.
 2. Не упоминай эффектов и механизмов, которых нет в данных и правилах.
 3. Пиши по-русски, коротко и конкретно, для городского управленца. Каждый пункт — 1–2 предложения.
 4. summary — 1–2 предложения: главный итог сценария.
@@ -78,19 +77,15 @@ async function callModel(input: unknown, apiKey: string): Promise<RawReport> {
 }
 
 export async function POST(request: Request) {
-  let payload: { plan?: Choice[] } & Partial<ModsInput>;
+  let body: unknown;
   try {
-    payload = await request.json();
+    body = await request.json();
   } catch {
     return Response.json({ error: "Некорректный JSON" }, { status: 400 });
   }
-  const plan = Array.isArray(payload.plan) ? payload.plan : [];
-  const modsInput: ModsInput = {
-    mods: payload.mods ?? { emergencies: false, anger: false, promises: false },
-    responses: payload.responses ?? {},
-    promiseIds: payload.promiseIds ?? [],
-  };
-
+  const parsed = parseRequest(body);
+  if (!parsed.ok) return Response.json({ error: parsed.error }, { status: 400 });
+  const { plan, modsInput } = parsed;
   const analyzed = analyzePlan(plan, modsInput);
   if (!analyzed.ok) return Response.json({ error: "План недопустим — Score не рассчитывается", issues: analyzed.issues }, { status: 422 });
   const { analysis } = analyzed;

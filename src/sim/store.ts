@@ -5,6 +5,7 @@
  */
 import { create } from "zustand";
 import type { Choice, DistrictId, MeasureId } from "@/domain/types";
+import { evaluatePlan, issuesForAdding } from "@/domain/engine";
 import type { ReportPayload } from "./report";
 
 export type Phase = "plan" | "revealed";
@@ -91,10 +92,12 @@ export const useSimStore = create<SimState>()((set) => ({
   setDebriefOpen: (debriefOpen) => set({ debriefOpen }),
 
   setDistrict: (district) => set({ district }),
-  addChoice: (choice) => set((s) => ({ plan: [...s.plan, choice], report: { status: "idle" } })),
+  // Rules are enforced at the action boundary too, not only by disabled buttons.
+  addChoice: (choice) =>
+    set((s) => (s.phase === "plan" && issuesForAdding(s.plan, choice).length === 0 ? { plan: [...s.plan, choice], report: { status: "idle" } } : {})),
   removeChoice: (measureId) =>
     set((s) => ({ plan: s.plan.filter((c) => c.measureId !== measureId), report: { status: "idle" } })),
-  replacePlan: (plan) => set({ plan, phase: "plan", report: { status: "idle" }, responses: {}, ghost: false, revealStep: -1, debriefOpen: false }),
+  replacePlan: (plan) => set(evaluatePlan(plan).ok ? { plan, phase: "plan", report: { status: "idle" }, responses: {}, ghost: false, revealStep: -1, debriefOpen: false } : {}),
   clearPlan: () => set({ plan: [], phase: "plan", report: { status: "idle" }, responses: {}, ghost: false, revealStep: -1, debriefOpen: false }),
   setAnalyst: (analyst) => set({ analyst }),
   setGhost: (ghost) => set({ ghost }),
@@ -108,7 +111,7 @@ export const useSimStore = create<SimState>()((set) => ({
           : [...s.promiseIds, id],
     })),
   setResponse: (eventId, responseId) => set((s) => ({ responses: { ...s.responses, [eventId]: responseId } })),
-  sign: () => set({ phase: "revealed", report: { status: "idle" }, responses: {}, ghost: false, revealStep: 0, debriefOpen: false }),
+  sign: () => set((s) => (evaluatePlan(s.plan).ok ? { phase: "revealed", report: { status: "idle" }, responses: {}, ghost: false, revealStep: 0, debriefOpen: false } : {})),
   edit: () => set({ phase: "plan", ghost: false, revealStep: -1, debriefOpen: false }),
   setReport: (report) => set({ report }),
   showToast: (text, tone = "error") => set({ toast: { text, tone } }),

@@ -179,7 +179,18 @@ function SignBar() {
       </div>
     );
   const evaluation = evaluatePlan(plan);
-  const reason = evaluation.ok ? null : evaluation.issues[0]?.message;
+  // Dead end: fewer than 5 decisions, but no remaining measure fits the budget and rules in any district.
+  const stuck =
+    plan.length > 0 &&
+    plan.length < DECISIONS &&
+    !MEASURE_IDS.some((id) =>
+      (MEASURES[id].scope === "city" ? [null] : DISTRICT_IDS).some((d) => issuesForAdding(plan, { measureId: id, districtId: d }).length === 0),
+    );
+  const reason = stuck
+    ? `Тупик: ни одна из оставшихся мер не помещается в остаток бюджета или в правила. Уберите одну из выбранных мер.`
+    : evaluation.ok
+      ? null
+      : evaluation.issues[0]?.message;
   return (
     <div className="sim-sign" data-tour="sign">
       <button type="button" className="sim-btn sim-btn--primary" disabled={!evaluation.ok} onClick={sign}>

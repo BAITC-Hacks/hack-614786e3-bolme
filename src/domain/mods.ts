@@ -153,7 +153,7 @@ const fmt = (x: number) => x.toFixed(1).replace(".", ",");
 export const PROMISES: PublicPromise[] = [
   {
     id: "schools-nura",
-    text: "Уберу вторую смену в школах Нуры",
+    text: "Выведу школы Нуры из критической зоны",
     districtId: "nura",
     check: (r) => v(r, "nura", "S1") >= CRITICAL_THRESHOLD,
     proof: (r) => `Школы в Нуре: ${fmt(r.baseline.nura.S1)} → ${fmt(v(r, "nura", "S1"))} (порог 40)`,

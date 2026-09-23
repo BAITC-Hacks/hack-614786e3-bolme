@@ -5,8 +5,8 @@
  * scenario assessment, strengths, risks, consequences, trade-offs and
  * recommendations, plus how the city reacted. Every number is from the engine.
  */
-import { BUDGET, DIRECTIONS, DISTRICTS, MEASURES } from "@/domain/data";
-import { DIRECTION_IDS, DISTRICT_IDS } from "@/domain/types";
+import { BUDGET, DIRECTIONS, DISTRICTS, INDICATORS, MEASURES } from "@/domain/data";
+import { DIRECTION_IDS, DISTRICT_IDS, INDICATOR_IDS } from "@/domain/types";
 import type { Analysis } from "@/sim/analysis";
 import { num, signed } from "@/sim/labels";
 import { useSimStore } from "@/sim/store";
@@ -84,9 +84,21 @@ function BudgetSplit({ a }: { a: Analysis }) {
           </li>
         ))}
       </ul>
-      {byDir.some((x) => !x.cost) && (
-        <p className="sim-note">Без вложений: {byDir.filter((x) => !x.cost).map((x) => DIRECTIONS[x.d].short).join(", ")}. Правила это допускают (не более двух мер на направление), но жители этих сфер перемен не почувствуют.</p>
-      )}
+      {byDir
+        .filter((x) => !x.cost)
+        .map((x) => {
+          // Derive the statement from indicator deltas: citywide measures of other directions can still move these indicators.
+          const ks = INDICATOR_IDS.filter((k) => INDICATORS[k].direction === x.d);
+          const moved = ks.filter((k) => DISTRICT_IDS.some((dd) => Math.abs(a.result.indicators[dd][k] - a.result.baseline[dd][k]) > 1e-9));
+          return (
+            <p key={x.d} className="sim-note">
+              {DIRECTIONS[x.d].short}: без прямых вложений (правила допускают — не более двух мер на направление).{" "}
+              {moved.length
+                ? `Показатели ${moved.join(", ")} всё равно изменились за счёт мер других направлений.`
+                : `Показатели ${ks.join(", ")} остались на исходном уровне.`}
+            </p>
+          );
+        })}
     </div>
   );
 }

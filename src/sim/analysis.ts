@@ -46,6 +46,32 @@ export function analyzePlan(plan: Choice[], modsInput: ModsInput): { ok: true; a
 
 export const contributionsOf = (a: Analysis) => a.shapley.map((s) => ({ label: choiceLabel(s.choice), value: s.value }));
 
+/** Validates the shape of an API request body. Rule violations are left to the engine (it returns reasons). */
+export function parseRequest(body: unknown): { ok: true; plan: Choice[]; modsInput: ModsInput } | { ok: false; error: string } {
+  if (!body || typeof body !== "object") return { ok: false, error: "Ожидается JSON-объект" };
+  const b = body as Record<string, unknown>;
+  if (!Array.isArray(b.plan) || b.plan.length > 20) return { ok: false, error: "plan: ожидается массив решений" };
+  const plan: Choice[] = [];
+  for (const c of b.plan) {
+    if (!c || typeof c !== "object") return { ok: false, error: "plan: каждое решение — объект { measureId, districtId }" };
+    const { measureId, districtId } = c as Record<string, unknown>;
+    if (typeof measureId !== "string" || !(districtId === null || typeof districtId === "string"))
+      return { ok: false, error: "plan: measureId — строка, districtId — строка или null" };
+    plan.push({ measureId, districtId } as Choice);
+  }
+  const m = (b.mods ?? {}) as Record<string, unknown>;
+  const responses = b.responses && typeof b.responses === "object" ? (b.responses as Record<string, unknown>) : {};
+  return {
+    ok: true,
+    plan,
+    modsInput: {
+      mods: { emergencies: m.emergencies === true, anger: m.anger === true, promises: m.promises === true },
+      responses: Object.fromEntries(Object.entries(responses).filter(([, v]) => typeof v === "string")) as Record<string, string>,
+      promiseIds: Array.isArray(b.promiseIds) ? b.promiseIds.filter((x): x is string => typeof x === "string") : [],
+    },
+  };
+}
+
 /** Seed of the social feed: same plan, responses and promises => same reactions (order-independent). */
 export function socialSeed(plan: Choice[], m: Pick<ModsInput, "responses" | "promiseIds">): string {
   return JSON.stringify({ plan: [...plan].sort((a, b) => a.measureId.localeCompare(b.measureId)), responses: m.responses, promises: [...m.promiseIds].sort() });

@@ -7,8 +7,7 @@
  * they appear in that post's computed facts; otherwise the template text stays.
  */
 import { buildSocialFeed, type SocialPost } from "@/domain/social";
-import type { Choice } from "@/domain/types";
-import { analyzePlan, socialSeed, type ModsInput } from "@/sim/analysis";
+import { analyzePlan, parseRequest, socialSeed } from "@/sim/analysis";
 
 const MODEL = process.env.OPENAI_MODEL ?? "gpt-6-luna";
 const TIMEOUT_MS = 25_000;
@@ -65,18 +64,15 @@ async function rewrite(posts: SocialPost[], apiKey: string): Promise<Record<stri
 }
 
 export async function POST(request: Request) {
-  let payload: { plan?: Choice[] } & Partial<ModsInput>;
+  let body: unknown;
   try {
-    payload = await request.json();
+    body = await request.json();
   } catch {
     return Response.json({ error: "Некорректный JSON" }, { status: 400 });
   }
-  const plan = Array.isArray(payload.plan) ? payload.plan : [];
-  const modsInput: ModsInput = {
-    mods: payload.mods ?? { emergencies: false, anger: false, promises: false },
-    responses: payload.responses ?? {},
-    promiseIds: payload.promiseIds ?? [],
-  };
+  const parsed = parseRequest(body);
+  if (!parsed.ok) return Response.json({ error: parsed.error }, { status: 400 });
+  const { plan, modsInput } = parsed;
   const analyzed = analyzePlan(plan, modsInput);
   if (!analyzed.ok) return Response.json({ error: "План недопустим", issues: analyzed.issues }, { status: 422 });
   const { result, mods } = analyzed.analysis;
