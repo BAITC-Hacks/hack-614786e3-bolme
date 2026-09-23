@@ -1,0 +1,13 @@
+# Журнал использования Codex
+
+Использование Codex обязательно по правилам HackAlem AI. Здесь записаны сессии Codex CLI (`codex exec`, модель `gpt-6-astra`, service tier `fast`) и то, что люди проверили после каждой из них. Время указано в UTC, 23 сентября 2026.
+
+| Время | Задача | Сессия Codex | Результат | Что проверили люди |
+| --- | --- | --- | --- | --- |
+| ~10:30 | Анализ кейса глазами жюри: карта критериев, объём работ, сценарий демо | `01a0cdd3-03dd-78f1-ae43-0818d00dc1ee` | [lens-A](research/akim-analysis/codex/lens-A-jury-strategy.md) | Числа демо-ловушки (52.42 → 53.36) пересчитаны независимым скриптом. Принята поправка: Score ≠ среднее поквартальных Score |
+| ~10:30 | Реализм симуляции, события ЧС, география районов Астаны (с веб-поиском) | `01a0cdd3-0462-7d23-814c-ea3292c6c5a6` | [lens-B](research/akim-analysis/codex/lens-B-simulation-realism.md) | Поквартальная динамика оптимума (слабейший район меняется в Q5) пересчитана. События ЧС взяты в мод как игровые допущения |
+| ~10:30 | Геймдизайн: 30 механик, топ-6, три концепции продукта | `01a0cdd3-05a1-7b51-8de2-a630fca16ae9` | [lens-C](research/akim-analysis/codex/lens-C-game-design.md) | Выбраны механики «призрак оптимума», проверенные замены, обещания |
+| ~10:30 | Архитектура: стек, реестр фактов для AI, тесты, README | `01a0cdd3-06ad-7460-bd13-906b1992b986` | [lens-D](research/akim-analysis/codex/lens-D-architecture.md) | Паттерн «AI ссылается на id фактов, числа подставляет код» реализован в `src/sim/report.ts` |
+| 11:16 | Реализация движка по контракту `src/domain/types.ts`: валидатор, формула, полный перебор, замены, Шепли, ранг, генерация `solver.json`, 29 тестов | `01a0cdfb-a3ec-7c43-9867-718d9f74b41f` | `src/domain/engine.ts`, `solver.ts`, `rank.ts`, `engine.test.ts`, `scripts/sim/solve.ts` | `npm test`: 29/29 на машине команды. Эталоны совпадают с кейсом и независимым перебором (52.55768 / 56.54307 / 57.236735; 1 181 наборов, 694 395 планов). `tsc --noEmit` и ESLint без ошибок |
+
+Промпты, общий бриф и полные ответы лежат в [docs/research/akim-analysis/codex/](research/akim-analysis/codex/). Задача на реализацию движка с критериями готовности: [engine-task-prompt.md](research/akim-analysis/codex/engine-task-prompt.md), итоговый отчёт Codex: [engine-task-report.md](research/akim-analysis/codex/engine-task-report.md).
