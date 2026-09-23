@@ -4,12 +4,40 @@ import { useState } from "react";
 import { BUDGET, DECISIONS, DIRECTIONS, DISTRICTS, HORIZON_QUARTERS, INCOMPATIBILITIES, INDICATORS, MEASURES, SYNERGIES } from "@/domain/data";
 import { evaluatePlan, issuesForAdding } from "@/domain/engine";
 import { DIRECTION_IDS, DISTRICT_IDS, MEASURE_IDS, type Choice, type DirectionId, type Measure } from "@/domain/types";
-import { lagText, num, SHORT } from "@/sim/labels";
+import { lagText, num, SHORT, signed } from "@/sim/labels";
 import { useSimStore } from "@/sim/store";
-import { usePreview } from "@/sim/useAnalysis";
+import { BASELINE, useGainIfAdded, useGainOf, usePreview } from "@/sim/useAnalysis";
 import { Icon, MEASURE_ICONS } from "@/ui/icons";
 
+/** Analyst mode: live Score of the plan as it is now (not official until signed). */
+function Forecast() {
+  const plan = useSimStore((s) => s.plan);
+  const preview = usePreview();
+  const delta = preview.score - BASELINE.score;
+  return (
+    <div className="sim-forecast" aria-live="polite">
+      <span className="sim-forecast__label">
+        <Icon name="chart" size={14} /> Прогноз Score
+      </span>
+      {plan.length ? (
+        <>
+          <span className="sim-forecast__value">
+            {num(BASELINE.score)} → <b>{num(preview.score)}</b>
+            <em className={delta >= 0 ? "is-up" : "is-down"}>{signed(delta)}</em>
+          </span>
+          <small>
+            Критических показателей: {BASELINE.nCrit} → {preview.nCrit}. Официальный Score — после подписи.
+          </small>
+        </>
+      ) : (
+        <small>Добавьте меру — прогноз и прирост каждой карточки пересчитаются сразу.</small>
+      )}
+    </div>
+  );
+}
+
 function BudgetHeader() {
+  const phase = useSimStore((s) => s.phase);
   const plan = useSimStore((s) => s.plan);
   const analyst = useSimStore((s) => s.analyst);
   const setAnalyst = useSimStore((s) => s.setAnalyst);
@@ -39,11 +67,14 @@ function BudgetHeader() {
           Осталось {BUDGET - preview.cost} ед. · выбрано {plan.length} из {DECISIONS}
         </p>
       </div>
+      {analyst && phase === "plan" && <Forecast />}
     </header>
   );
 }
 
 function Slots() {
+  const analyst = useSimStore((s) => s.analyst);
+  const gains = useGainOf();
   const plan = useSimStore((s) => s.plan);
   const phase = useSimStore((s) => s.phase);
   const removeChoice = useSimStore((s) => s.removeChoice);
@@ -71,7 +102,10 @@ function Slots() {
                 {c.districtId ? DISTRICTS[c.districtId].name : "Весь город"} · {lagText(m.lag)}
               </span>
             </span>
-            <span className="sim-slot__cost">{m.cost} ед.</span>
+            <span className="sim-slot__cost">
+              {m.cost} ед.
+              {analyst && gains[m.id] !== undefined && <em className={gains[m.id]! >= 0 ? "is-up" : "is-down"}>{signed(gains[m.id]!)}</em>}
+            </span>
             {phase === "plan" && (
               <button type="button" className="sim-slot__remove" onClick={() => removeChoice(c.measureId)} aria-label={`Убрать ${m.title}`}>
                 ×
@@ -171,7 +205,8 @@ function EffectChips({ m }: { m: Measure }) {
   );
 }
 
-function MeasureCard({ m }: { m: Measure }) {
+function MeasureCard({ m, gain }: { m: Measure; gain?: number }) {
+  const analyst = useSimStore((s) => s.analyst);
   const plan = useSimStore((s) => s.plan);
   const district = useSimStore((s) => s.district);
   const addChoice = useSimStore((s) => s.addChoice);
@@ -206,6 +241,11 @@ function MeasureCard({ m }: { m: Measure }) {
           <span className={`sim-scope sim-scope--${m.scope}`}>{m.scope === "city" ? "Весь город · 5 районов" : `Район: ${chosen?.districtId ? DISTRICTS[chosen.districtId].name : DISTRICTS[district].name}`}</span>
           <span>{lagText(m.lag)}</span>
         </span>
+        {analyst && gain !== undefined && (
+          <span className={`sim-card__gain ${gain >= 0.005 ? "is-up" : gain <= -0.005 ? "is-down" : "is-flat"}`}>
+            <Icon name="chart" size={13} /> {signed(gain)} к Score, если добавить сейчас
+          </span>
+        )}
         <EffectChips m={m} />
         {(synergy.length > 0 || conflicts.length > 0) && (
           <span className="sim-card__hints">
@@ -233,6 +273,7 @@ function Catalog() {
   const district = useSimStore((s) => s.district);
   const setDistrict = useSimStore((s) => s.setDistrict);
   const [dir, setDir] = useState<DirectionId | "all">("all");
+  const gains = useGainIfAdded();
   const measures = MEASURE_IDS.map((id) => MEASURES[id]).filter((m) => dir === "all" || m.direction === dir);
   return (
     <div className="sim-catalog" data-tour="catalog">
@@ -258,7 +299,7 @@ function Catalog() {
       </div>
       <ul className="sim-cards">
         {measures.map((m) => (
-          <MeasureCard key={m.id} m={m} />
+          <MeasureCard key={m.id} m={m} gain={gains[m.id]} />
         ))}
       </ul>
     </div>

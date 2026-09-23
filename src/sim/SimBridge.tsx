@@ -7,6 +7,7 @@
  */
 import { useEffect } from "react";
 import { CRITICAL_THRESHOLD, DISTRICTS } from "@/domain/data";
+import { simulate } from "@/domain/engine";
 import { DISTRICT_IDS, INDICATOR_IDS, type DistrictId } from "@/domain/types";
 import { useCityStore, type Hotspot } from "@/city/store";
 import { num, SHORT } from "./labels";
@@ -19,6 +20,7 @@ export function SimBridge() {
   const status = useCityStore((s) => s.status);
   const manifest = useCityStore((s) => s.manifest);
   const plan = useSimStore((s) => s.plan);
+  const analyst = useSimStore((s) => s.analyst);
   const analysis = useSignedAnalysis();
 
   // Engine → hotspots ("stones in the water").
@@ -26,10 +28,25 @@ export function SimBridge() {
     if (status !== "ready" || !manifest) return;
     const centre = (d: DistrictId) => manifest.districts.find((x) => x.id === d)?.center ?? [0, 0];
     const list: Hotspot[] = [];
+    // Analyst mode: rings follow the live forecast of the unsigned plan.
+    const forecast = !analysis && analyst && plan.length ? simulate(plan) : null;
     for (const d of DISTRICT_IDS) {
       const [x, z] = centre(d);
       const measures = plan.filter((c) => c.districtId === d).map((c) => c.measureId);
-      if (!analysis) {
+      if (forecast) {
+        const crit = forecast.criticalPairs.filter((p) => p.districtId === d);
+        const delta = forecast.districtScores[d] - forecast.baselineDistrictScores[d];
+        list.push({
+          id: d,
+          districtId: d,
+          title: DISTRICTS[d].name,
+          caption: `Прогноз: балл ${num(forecast.baselineDistrictScores[d], 1)} → ${num(forecast.districtScores[d], 1)}${crit.length ? ` · ниже 40: ${crit.map((p) => SHORT[p.indicator]).join(", ")}` : ""}`,
+          x,
+          z,
+          radius: 950,
+          tone: crit.length ? "critical" : delta > 0.3 ? "positive" : delta > 0.005 ? "info" : "warning",
+        });
+      } else if (!analysis) {
         const base = DISTRICTS[d].baseline;
         const crit = INDICATOR_IDS.filter((k) => base[k] < CRITICAL_THRESHOLD);
         const weakest = [...INDICATOR_IDS].sort((a, b) => base[a] - base[b]).slice(0, 2);
@@ -79,7 +96,7 @@ export function SimBridge() {
       }
     }
     useCityStore.getState().setHotspots(list);
-  }, [status, manifest, plan, analysis]);
+  }, [status, manifest, plan, analyst, analysis]);
 
   // Camera focus → district in the side panel.
   useEffect(

@@ -140,6 +140,8 @@ function ModsSetup() {
 
 function CityOverview() {
   const preview = usePreview();
+  const analyst = useSimStore((s) => s.analyst);
+  const plan = useSimStore((s) => s.plan);
   const baseCrit = DISTRICT_IDS.flatMap((d) => INDICATOR_IDS.filter((k) => DISTRICTS[d].baseline[k] < CRITICAL_THRESHOLD).map((k) => `${DISTRICTS[d].name}: ${SHORT[k]} ${DISTRICTS[d].baseline[k]}`));
   return (
     <div className="sim-block sim-overview" data-tour="score">
@@ -147,6 +149,11 @@ function CityOverview() {
         <span className="sim-eyebrow">Astana QoL Score сейчас</span>
         <strong className="sim-overview__score">{num(preview.baselineScore)}</strong>
       </div>
+      {analyst && plan.length > 0 && (
+        <p className="sim-overview__forecast">
+          Прогноз с вашим планом: <b>{num(preview.score)}</b> <em className={preview.score >= preview.baselineScore ? "is-up" : "is-down"}>{signed(preview.score - preview.baselineScore)}</em> · критических {preview.nCrit}
+        </p>
+      )}
       <p>
         Критических показателей (&lt; 40): <b>{baseCrit.length}</b> — {baseCrit.join(", ")}. Итоговая оценка появится только после подписи допустимого плана из 5 решений.
       </p>

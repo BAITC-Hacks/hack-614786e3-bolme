@@ -1121,6 +1121,91 @@ em.is-flat {
   background: color-mix(in srgb, var(--tone) 13%, transparent);
 }
 
+
+/* ------------------------------------------------------------ analyst --- */
+.sim-forecast {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: var(--radius-card);
+  background: var(--color-accent-soft);
+  border: 1px solid rgb(87 99 73 / 0.22);
+  animation: card-in var(--duration-normal) var(--ease-out-expo);
+}
+.sim-forecast__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+}
+.sim-forecast__value {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: var(--text-sm);
+  color: var(--color-ink-soft);
+}
+.sim-forecast__value b {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  color: var(--color-ink);
+}
+.sim-forecast__value em {
+  font-style: normal;
+  font-weight: 700;
+}
+.sim-forecast small {
+  font-size: 0.7rem;
+  line-height: 1.4;
+  color: var(--color-ink-soft);
+}
+.sim-slot__cost {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+.sim-slot__cost em {
+  font-style: normal;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+.sim-card__gain {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  align-self: flex-start;
+  padding: 3px 9px;
+  border-radius: var(--radius-chip);
+  font-size: 0.7rem;
+  font-weight: 700;
+  background: var(--tint-1);
+}
+.sim-card__gain.is-up {
+  color: var(--color-positive);
+  background: rgb(79 122 58 / 0.12);
+}
+.sim-card__gain.is-down {
+  color: var(--color-critical);
+  background: rgb(180 71 47 / 0.1);
+}
+.sim-card__gain.is-flat {
+  color: var(--color-ink-soft);
+}
+.sim-overview__forecast {
+  margin: 0;
+  padding-top: 6px;
+  border-top: 1px dashed var(--color-glass-line);
+}
+.sim-overview__forecast em {
+  font-style: normal;
+  font-weight: 700;
+}
+
 /* -------------------------------------------------------------- brief --- */
 .brief {
   position: fixed;
