@@ -1,0 +1,4 @@
+lens A: session id: 01a0cdd3-03dd-78f1-ae43-0818d00dc1ee | model: gpt-6-astra | tokens 48,923
+lens B: session id: 01a0cdd3-0462-7d23-814c-ea3292c6c5a6 | model: gpt-6-astra | tokens 98,092
+lens C: session id: 01a0cdd3-05a1-7b51-8de2-a630fca16ae9 | model: gpt-6-astra | tokens 52,408
+lens D: session id: 01a0cdd3-06ad-7460-bd13-906b1992b986 | model: gpt-6-astra | tokens 92,350
