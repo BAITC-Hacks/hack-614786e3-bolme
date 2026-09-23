@@ -11,6 +11,7 @@ import { Intro } from "@/ui/onboarding/Intro";
 import { useOnboardingStore } from "@/ui/onboarding/store";
 import { HelpButton, Walkthrough } from "@/ui/onboarding/Walkthrough";
 import { EventsBell } from "@/ui/sim/EventsCard";
+import { FocusActions } from "@/ui/sim/FocusActions";
 
 const HINTS: Record<ViewMode, string[]> = {
   map: ["Тяни — сдвиг", "Колесо — масштаб", "ПКМ — поворот", "Клик по кругу — пролёт в 3D"],
@@ -57,6 +58,7 @@ function FocusCard() {
       <p className="focus-card__eyebrow">{EYEBROW[focus.kind]}</p>
       <h2 className="focus-card__title">{title}</h2>
       <p className="focus-card__caption">{caption}</p>
+      <FocusActions focus={focus} />
       <button type="button" className="focus-card__back" onClick={backToMap}>
         <span aria-hidden>←</span> К карте <kbd>Esc</kbd>
       </button>

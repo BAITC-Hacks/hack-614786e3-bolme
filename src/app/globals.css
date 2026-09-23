@@ -194,7 +194,11 @@ kbd {
   position: absolute;
   top: calc(var(--gap-edge) + 64px);
   left: var(--gap-edge);
-  width: min(320px, calc(100vw - 2 * var(--gap-edge)));
+  width: min(380px, calc(100vw - 2 * var(--gap-edge)));
+  max-height: calc(100vh - 2 * var(--gap-edge) - 150px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
   padding: 18px 18px 16px;
   border-radius: var(--radius-panel);
   border-left: 3px solid var(--tone);

@@ -1206,6 +1206,195 @@ em.is-flat {
   font-weight: 700;
 }
 
+
+/* ------------------------------------------------ decisions in 3D view --- */
+.focus-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: -4px 0 14px;
+}
+.focus-actions__weak {
+  margin: 0;
+  font-size: var(--text-xs);
+  line-height: 1.6;
+  color: var(--color-ink-soft);
+}
+.focus-actions__weak b {
+  display: inline-block;
+  margin: 0 4px 2px 0;
+  padding: 1px 8px;
+  border-radius: var(--radius-chip);
+  background: var(--tint-2);
+  color: var(--color-ink);
+  font-weight: 600;
+}
+.focus-actions__weak b.is-critical {
+  background: rgb(180 71 47 / 0.12);
+  color: var(--color-critical);
+}
+.focus-actions__title {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin: 2px 0 0;
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+}
+.focus-actions__title span {
+  font-family: var(--font-ui);
+  font-weight: 500;
+  font-size: var(--text-xs);
+  color: var(--color-ink-soft);
+}
+.focus-actions__list,
+.focus-actions__chosen {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.focus-actions__chosen li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 6px 5px 10px;
+  border-radius: var(--radius-chip);
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+  font-size: var(--text-xs);
+  font-weight: 600;
+}
+.focus-actions__chosen button {
+  margin-left: auto;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+}
+.focus-actions__chosen button:hover {
+  background: rgb(87 99 73 / 0.18);
+}
+.focus-actions__empty {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--color-ink-soft);
+}
+.focus-measure {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: var(--radius-card);
+  background: rgb(255 253 248 / 0.7);
+  border: 1px solid var(--color-glass-line);
+}
+.focus-measure__icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+}
+.focus-measure__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.focus-measure__body b {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  line-height: 1.25;
+}
+.focus-measure__body b small {
+  font-size: 0.66rem;
+  color: var(--color-ink-soft);
+}
+.focus-measure__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.focus-measure__tags span {
+  padding: 1px 7px;
+  border-radius: var(--radius-chip);
+  background: var(--tint-1);
+  font-size: 0.66rem;
+  color: var(--color-ink-soft);
+}
+.focus-measure__tags .is-up {
+  color: var(--color-positive);
+  background: rgb(79 122 58 / 0.1);
+}
+.focus-measure__tags .is-down {
+  color: var(--color-critical);
+  background: rgb(180 71 47 / 0.1);
+}
+.focus-measure__tags .is-shield {
+  color: #3b6f7a;
+  background: rgb(59 111 122 / 0.12);
+}
+.focus-measure__reason {
+  font-size: 0.66rem;
+  color: var(--color-warning);
+}
+.focus-measure .sim-btn {
+  flex: none;
+}
+.focus-plan {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--color-glass-line);
+  font-size: var(--text-xs);
+  color: var(--color-ink-soft);
+}
+.focus-plan b {
+  color: var(--color-ink);
+}
+.focus-response {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border-radius: var(--radius-chip);
+  border: 1px solid var(--color-glass-line);
+  background: rgb(255 253 248 / 0.7);
+  color: var(--color-ink);
+  font-size: var(--text-xs);
+  text-align: left;
+  transition: background var(--duration-fast) ease;
+}
+.focus-response span {
+  flex: 1;
+}
+.focus-response:hover:not(:disabled) {
+  background: var(--color-card);
+}
+.focus-response.is-chosen {
+  background: var(--color-accent);
+  border-color: transparent;
+  color: var(--color-accent-ink);
+}
+.focus-response:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 /* -------------------------------------------------------------- brief --- */
 .brief {
   position: fixed;
