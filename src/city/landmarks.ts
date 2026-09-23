@@ -18,6 +18,8 @@ export type LandmarkDef = {
   baseHeight?: number;
   /** Used when the OSM element is not part of the downloaded layers. */
   fallback?: { lat: number; lon: number };
+  /** Tint buildings around the anchor (towers of a complex) with a glass accent. */
+  accentZone?: { radius: number; minHeight: number; accent: "glass" | "emerald" };
 };
 
 export type LandmarkId =
@@ -48,9 +50,28 @@ export const LANDMARKS: LandmarkDef[] = [
     osm: ["node/2681623412"],
     fallback: { lat: 51.12211, lon: 71.46988 },
   },
-  { id: "abu-dhabi-plaza", title: "Abu Dhabi Plaza", mode: "anchor", osm: ["way/1373723368"] },
-  { id: "emerald", title: "Изумрудный квартал", mode: "anchor", osm: ["way/230361899"] },
-  { id: "northern-lights", title: "Северное сияние", mode: "anchor", osm: ["way/230358851"] },
-  { id: "transport-tower", title: "Транспорт Тауэр", mode: "anchor", osm: ["relation/3466338"] },
-  { id: "astana-arena", title: "Астана Арена", mode: "anchor", osm: ["way/1460088073"] },
+  {
+    id: "abu-dhabi-plaza",
+    title: "Abu Dhabi Plaza",
+    mode: "anchor",
+    osm: ["way/1373723368"],
+    accentZone: { radius: 90, minHeight: 40, accent: "glass" },
+  },
+  {
+    id: "emerald",
+    title: "Изумрудный квартал",
+    mode: "anchor",
+    osm: ["way/230361899"],
+    accentZone: { radius: 170, minHeight: 30, accent: "emerald" },
+  },
+  // Three towers with wave-shaped crowns; OSM parts give footprints and levels.
+  { id: "northern-lights", title: "Северное сияние", mode: "replace", osm: ["way/230358851", "way/230358853", "way/230358852"] },
+  {
+    id: "transport-tower",
+    title: "Транспорт Тауэр",
+    mode: "anchor",
+    osm: ["relation/3466338"],
+    accentZone: { radius: 60, minHeight: 40, accent: "glass" },
+  },
+  { id: "astana-arena", title: "Астана Арена", mode: "replace", osm: ["way/166223262"] },
 ];

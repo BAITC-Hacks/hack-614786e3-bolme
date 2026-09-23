@@ -13,6 +13,7 @@ import { join } from "node:path";
 import { LANDMARKS } from "../../src/city/landmarks";
 import {
   AreaKind,
+  BuildingAccent,
   BuildingFlag,
   BuildingKind,
   CITY_DATA_VERSION,
@@ -31,7 +32,7 @@ import {
   TREE_RECORD_BYTES,
 } from "../../src/city/schema";
 import { DISTRICT_RELATIONS, ORIGIN, OUT_DIR, RAW_DIR, SCENE_BBOX } from "./config";
-import { areaKind, buildingHeight, buildingKind, parseMeters, railInfo, roadInfo } from "./lib/classify";
+import { areaKind, buildingAccent, buildingHeight, buildingKind, parseMeters, railInfo, roadInfo } from "./lib/classify";
 import {
   boxesIntersect,
   cleanRing,
@@ -184,6 +185,8 @@ const replaceZones: Polygon[] = [];
 /** Footprints whose inner building:parts are removed (custom crown on top). */
 const baseZones: Polygon[] = [];
 const baseOverrides = new Map<string, number>();
+/** Glass accents around complexes (Emerald Quarter, Abu Dhabi Plaza…). */
+const accentZones: { x: number; z: number; radius: number; minHeight: number; accent: BuildingAccent }[] = [];
 
 for (const def of LANDMARKS) {
   const el = def.osm.map((ref) => byRef.get(ref)).find((e): e is OsmElement => !!e);
@@ -209,6 +212,31 @@ for (const def of LANDMARKS) {
   if (!anchor) {
     console.warn(`  landmark ${def.id}: not found in OSM layers`);
     continue;
+  }
+  if (def.mode === "replace" && def.osm.length > 1) {
+    // Keep each replaced element's footprint + height for multi-part custom models.
+    const parts: { ring: number[]; height: number }[] = [];
+    for (const ref of def.osm) {
+      const partEl = byRef.get(ref);
+      if (!partEl || partEl.type === "node") continue;
+      const polys = elementPolygons(partEl);
+      if (!polys.length) continue;
+      const outer = largestPolygon(polys)[0];
+      const tags = partEl.tags ?? {};
+      const info = buildingHeight(partEl.id, tags, buildingKind(tags), polygonArea(largestPolygon(polys)));
+      parts.push({ ring: outer.flatMap(([x, z]) => [Math.round(x * 10) / 10, Math.round(z * 10) / 10]), height: Math.round(info.height * 10) / 10 });
+      replaceZones.push(largestPolygon(polys));
+    }
+    anchor.parts = parts;
+  }
+  if (def.accentZone) {
+    accentZones.push({
+      x: anchor.x,
+      z: anchor.z,
+      radius: def.accentZone.radius,
+      minHeight: def.accentZone.minHeight,
+      accent: def.accentZone.accent === "emerald" ? BuildingAccent.Emerald : BuildingAccent.Glass,
+    });
   }
   landmarks[def.id] = anchor;
   if (def.mode === "replace") def.osm.forEach((ref) => excludedRefs.add(ref));
@@ -284,6 +312,7 @@ const buildings: BuildingsFile = {
   roofHeight: [],
   flags: [],
   district: [],
+  accent: [],
   rings: [],
   points: [],
   coords: [],
@@ -309,6 +338,8 @@ for (const c of candidates) {
   if (info.estimated) flags |= BuildingFlag.EstimatedHeight;
   if (c.isPart) flags |= BuildingFlag.Part;
   const districtIndex = districtRaster.get(c.cx, c.cz) - 1;
+  const zone = accentZones.find((a) => Math.hypot(c.cx - a.x, c.cz - a.z) <= a.radius && info.height >= a.minHeight);
+  const accent = override !== undefined ? BuildingAccent.None : (zone?.accent ?? buildingAccent(kind, info.height, info.estimated));
 
   for (const polygon of c.polygons) {
     const q = quantizePolygon(polygon, BUILDING_TOLERANCE);
@@ -322,6 +353,7 @@ for (const c of candidates) {
     buildings.roofHeight.push(Math.round(info.roofHeight * 10));
     buildings.flags.push(flags);
     buildings.district.push(districtIndex >= 0 ? districtIndex : 255);
+    buildings.accent?.push(accent);
     buildings.count++;
     buildingFootprints.push(polygon);
   }
@@ -407,11 +439,15 @@ const BLOCK_OTHER = 3;
 const green = new Raster(bounds, TREE_CELL);
 const blocked = new Raster(bounds, TREE_CELL);
 
+const ACCENT_NAMES = Object.fromEntries(Object.entries(BuildingAccent).map(([k, v]) => [v, k]));
+console.log("accents", Object.entries(
+  (buildings.accent ?? []).reduce<Record<string, number>>((acc, a) => ({ ...acc, [ACCENT_NAMES[a]]: (acc[ACCENT_NAMES[a]] ?? 0) + 1 }), {}),
+).map(([k, v]) => `${k}:${v}`).join(" "));
 const GREEN_ORDER: AreaKind[] = [AreaKind.Grass, AreaKind.Cemetery, AreaKind.Scrub, AreaKind.Park, AreaKind.Forest];
 for (const kind of GREEN_ORDER) {
   for (const item of areaItems) if (item.kind === kind) green.fillPolygon(item.polygon, kind);
 }
-const BLOCKING_AREAS = new Set<AreaKind>([AreaKind.Pitch, AreaKind.Parking, AreaKind.Plaza, AreaKind.Playground, AreaKind.Bridge, AreaKind.Sand, AreaKind.Rail]);
+const BLOCKING_AREAS = new Set<AreaKind>([AreaKind.Pitch, AreaKind.Track, AreaKind.Parking, AreaKind.Plaza, AreaKind.Playground, AreaKind.Bridge, AreaKind.Sand, AreaKind.Rail]);
 for (const item of areaItems) {
   if (item.kind === AreaKind.Water) blocked.fillPolygon(item.polygon, BLOCK_WATER);
   else if (BLOCKING_AREAS.has(item.kind)) blocked.fillPolygon(item.polygon, BLOCK_OTHER);

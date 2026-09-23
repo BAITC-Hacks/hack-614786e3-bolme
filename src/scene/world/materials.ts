@@ -27,17 +27,25 @@ export function createBuildingMaterial(): MeshStandardMaterial {
         `#include <common>
 attribute float aTint;
 attribute float aDistrict;
+attribute float aAccent;
 uniform float uHighlight;
 varying float vTint;
 varying float vHeight;
-varying float vDistrictMatch;`,
+varying float vDistrictMatch;
+varying float vAccent;
+varying float vNormalY;
+varying float vRun;`,
       )
       .replace(
         "#include <begin_vertex>",
         `#include <begin_vertex>
 vTint = aTint;
 vHeight = position.y;
-vDistrictMatch = 1.0 - step(0.5, abs(aDistrict - uHighlight));`,
+vDistrictMatch = 1.0 - step(0.5, abs(aDistrict - uHighlight));
+vAccent = aAccent;
+vNormalY = normal.y;
+// Horizontal coordinate along the facade, for curtain-wall mullions.
+vRun = dot(position.xz, vec2(-normal.z, normal.x));`,
       );
     shader.fragmentShader = shader.fragmentShader
       .replace(
@@ -47,18 +55,44 @@ uniform vec3 uHighlightColor;
 uniform float uHighlightMix;
 varying float vTint;
 varying float vHeight;
-varying float vDistrictMatch;`,
+varying float vDistrictMatch;
+varying float vAccent;
+varying float vNormalY;
+varying float vRun;`,
       )
       .replace(
         "#include <color_fragment>",
         `#include <color_fragment>
 diffuseColor.rgb *= vTint;
+float accentGlass = 0.0;
+{
+  // Sparse colour accents (BuildingAccent): glass towers, tinted roofs.
+  float accent = floor(vAccent + 0.5);
+  bool isRoof = vNormalY > 0.5;
+  if (accent == 1.0 || accent == 2.0 || accent == 5.0) {
+    if (!isRoof) {
+      vec3 glass = accent == 1.0 ? vec3(0.25, 0.37, 0.52) : vec3(0.1, 0.38, 0.25);
+      if (accent == 5.0) glass = mix(vec3(0.06, 0.4, 0.38), vec3(0.2, 0.22, 0.55), smoothstep(10.0, 140.0, vHeight));
+      float detail = 1.0 - smoothstep(1500.0, 4500.0, length(vViewPosition));
+      float floorBand = step(0.8, fract(vHeight / 3.6)) * detail;
+      float mullion = step(0.92, fract(vRun / 1.8)) * detail;
+      diffuseColor.rgb = mix(glass, vec3(0.82, 0.84, 0.86), max(floorBand * 0.85, mullion * 0.4));
+      accentGlass = 1.0 - max(floorBand, mullion * 0.6);
+    }
+  } else if (accent == 3.0 && isRoof) {
+    diffuseColor.rgb = vec3(0.93, 0.62, 0.25);
+  } else if (accent == 4.0 && isRoof) {
+    diffuseColor.rgb = vec3(0.9, 0.36, 0.34);
+  }
+}
 // Contact darkening: the first metres of every facade sit in ambient occlusion.
 diffuseColor.rgb *= mix(0.7, 1.0, smoothstep(0.0, 10.0, vHeight));
 diffuseColor.rgb = mix(diffuseColor.rgb, uHighlightColor, vDistrictMatch * uHighlightMix * 0.26);`,
-      );
+      )
+      .replace("#include <roughnessmap_fragment>", "#include <roughnessmap_fragment>\nroughnessFactor = mix(roughnessFactor, 0.16, accentGlass);")
+      .replace("#include <metalnessmap_fragment>", "#include <metalnessmap_fragment>\nmetalnessFactor = mix(metalnessFactor, 0.55, accentGlass);");
   };
-  material.customProgramCacheKey = () => "clay-building-v1";
+  material.customProgramCacheKey = () => "clay-building-v2";
   return material;
 }
 
@@ -120,12 +154,14 @@ export function createWaterMaterial(): MeshStandardMaterial {
     sin(p.x * 0.045 + t * 0.9) * 0.6 + sin((p.x + p.y) * 0.11 - t * 1.3) * 0.3 + sin(p.y * 0.23 + t * 1.7) * 0.15,
     cos(p.y * 0.05 - t * 0.8) * 0.6 + cos((p.x - p.y) * 0.09 + t * 1.1) * 0.3 + cos(p.x * 0.21 - t * 1.5) * 0.15
   ) * 0.045;
+  // Fine ripples alias into moire far away: calm the surface with distance.
+  g *= 1.0 - smoothstep(900.0, 3500.0, length(vViewPosition));
   vec3 ripple = normalize(vec3(g.x, 1.0, g.y));
   normal = normalize((viewMatrix * vec4(ripple, 0.0)).xyz);
 }`,
       );
   };
-  material.customProgramCacheKey = () => "water-v1";
+  material.customProgramCacheKey = () => "water-v2";
   return material;
 }
 

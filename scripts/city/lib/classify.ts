@@ -5,7 +5,7 @@
  * `building:levels`; only when both are missing an explicit estimate from the
  * building type and footprint area is used (and flagged as estimated).
  */
-import { AreaKind, BuildingKind, RailKind, RoadClass, RoofShape } from "../../../src/city/schema";
+import { AreaKind, BuildingAccent, BuildingKind, RailKind, RoadClass, RoofShape } from "../../../src/city/schema";
 import { hash01 } from "./geo";
 import type { Tags } from "./osm";
 
@@ -39,6 +39,14 @@ const HEALTH = new Set(["hospital", "clinic"]);
 const RELIGIOUS = new Set(["mosque", "church", "cathedral", "temple", "chapel", "synagogue", "religious"]);
 const SPORT = new Set(["stadium", "sports_hall", "sports_centre", "grandstand", "riding_hall"]);
 const TRANSPORT = new Set(["train_station", "transportation", "parking"]);
+
+export function buildingAccent(kind: BuildingKind, height: number, estimated: boolean): BuildingAccent {
+  if (!estimated && height >= 90) return BuildingAccent.Glass;
+  if (!estimated && height >= 45 && (kind === BuildingKind.Commercial || kind === BuildingKind.Public)) return BuildingAccent.Glass;
+  if (kind === BuildingKind.Education) return BuildingAccent.SchoolRoof;
+  if (kind === BuildingKind.Health) return BuildingAccent.HealthRoof;
+  return BuildingAccent.None;
+}
 
 export function buildingKind(tags: Tags): BuildingKind {
   const b = tags.building ?? tags["building:part"] ?? "yes";
@@ -145,7 +153,8 @@ export function areaKind(tags: Tags): AreaKind | null {
   if (landuse === "forest" || natural === "wood") return AreaKind.Forest;
   if (leisure === "park" || leisure === "garden" || leisure === "dog_park" || landuse === "recreation_ground" || landuse === "village_green") return AreaKind.Park;
   if (leisure === "playground") return AreaKind.Playground;
-  if (leisure === "pitch" || leisure === "track" || leisure === "golf_course") return AreaKind.Pitch;
+  if (leisure === "track") return AreaKind.Track;
+  if (leisure === "pitch" || leisure === "golf_course") return AreaKind.Pitch;
   if (landuse === "cemetery" || amenity === "grave_yard") return AreaKind.Cemetery;
   if (natural === "scrub" || natural === "heath") return AreaKind.Scrub;
   if (landuse === "grass" || landuse === "meadow" || landuse === "flowerbed" || landuse === "orchard" || landuse === "plant_nursery" || natural === "grassland") return AreaKind.Grass;

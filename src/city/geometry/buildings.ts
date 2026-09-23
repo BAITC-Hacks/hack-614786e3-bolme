@@ -4,6 +4,7 @@
  * Per-vertex attributes besides position/normal:
  *   aTint     (u8, normalized) — subtle per-building brightness variation
  *   aDistrict (f32)            — district index (255 = none) for highlighting
+ *   aAccent   (f32)            — BuildingAccent code (glass towers, tinted roofs)
  */
 import type { BufferGeometry } from "three";
 import { forEachPolygon, ringArea, ringCentroid, type DecodedRing } from "../decode";
@@ -31,6 +32,9 @@ function hashTint(id: number): number {
 
 type ChunkState = { writer: MeshWriter; ids: number[]; starts: number[] };
 
+/** Per-building vertex attributes shared by all its faces. */
+type VertexTag = { tint: number; district: number; accent: number };
+
 export function buildBuildingChunks(data: BuildingsFile, chunkSize: number): { chunks: BuildingChunk[]; stats: BuildingStats } {
   const states = new Map<string, ChunkState>();
   let triangles = 0;
@@ -46,6 +50,7 @@ export function buildBuildingChunks(data: BuildingsFile, chunkSize: number): { c
         writer: new MeshWriter([
           { name: "aTint", itemSize: 1, type: "u8", normalized: true },
           { name: "aDistrict", itemSize: 1, type: "f32" },
+          { name: "aAccent", itemSize: 1, type: "f32" },
         ]),
         ids: [],
         starts: [],
@@ -65,12 +70,14 @@ export function buildBuildingChunks(data: BuildingsFile, chunkSize: number): { c
     // Landmark bases and parts keep a pure tone; ordinary buildings vary ±3 %.
     const tint = flags & BuildingFlag.LandmarkBase ? 250 : Math.round(236 + hashTint(data.id[i]) * 19);
     const district = data.district[i];
+    const accent = data.accent?.[i] ?? 0;
+    const v: VertexTag = { tint, district, accent };
 
     const before = w.indexCount;
-    for (const ring of rings) addWalls(w, ring, base, wallTop, tint, district);
-    if (roof === RoofShape.Pyramidal && roofHeight > 0.5) addPyramid(w, outer, cx, cz, wallTop, top, tint, district);
-    else if (roof === RoofShape.Dome && roofHeight > 0.5) addDome(w, outer, cx, cz, wallTop, roofHeight, tint, district);
-    else addFlatRoof(w, rings, wallTop, tint, district);
+    for (const ring of rings) addWalls(w, ring, base, wallTop, v);
+    if (roof === RoofShape.Pyramidal && roofHeight > 0.5) addPyramid(w, outer, cx, cz, wallTop, top, v);
+    else if (roof === RoofShape.Dome && roofHeight > 0.5) addDome(w, outer, cx, cz, wallTop, roofHeight, v);
+    else addFlatRoof(w, rings, wallTop, v);
     triangles += (w.indexCount - before) / 3;
   });
 
@@ -87,7 +94,7 @@ export function buildBuildingChunks(data: BuildingsFile, chunkSize: number): { c
   return { chunks, stats: { buildings: data.count, triangles, chunks: chunks.length } };
 }
 
-function addWalls(w: MeshWriter, ring: DecodedRing, base: number, top: number, tint: number, district: number): void {
+function addWalls(w: MeshWriter, ring: DecodedRing, base: number, top: number, v: VertexTag): void {
   const n = ring.length / 2;
   const sign = ringArea(ring) >= 0 ? 1 : -1;
   for (let i = 0; i < n; i++) {
@@ -104,10 +111,10 @@ function addWalls(w: MeshWriter, ring: DecodedRing, base: number, top: number, t
     // so the same formula points out of the solid. `sign` guards odd data.
     const nx = (dz / len) * sign;
     const nz = (-dx / len) * sign;
-    const a = w.vertex(x0, base, z0, nx, 0, nz, tint, district);
-    const b = w.vertex(x1, base, z1, nx, 0, nz, tint, district);
-    const c = w.vertex(x1, top, z1, nx, 0, nz, tint, district);
-    const d = w.vertex(x0, top, z0, nx, 0, nz, tint, district);
+    const a = w.vertex(x0, base, z0, nx, 0, nz, v.tint, v.district, v.accent);
+    const b = w.vertex(x1, base, z1, nx, 0, nz, v.tint, v.district, v.accent);
+    const c = w.vertex(x1, top, z1, nx, 0, nz, v.tint, v.district, v.accent);
+    const d = w.vertex(x0, top, z0, nx, 0, nz, v.tint, v.district, v.accent);
     if (sign > 0) {
       w.triangle(a, c, b);
       w.triangle(a, d, c);
@@ -118,14 +125,14 @@ function addWalls(w: MeshWriter, ring: DecodedRing, base: number, top: number, t
   }
 }
 
-function addFlatRoof(w: MeshWriter, rings: DecodedRing[], y: number, tint: number, district: number): void {
+function addFlatRoof(w: MeshWriter, rings: DecodedRing[], y: number, v: VertexTag): void {
   const { vertices, indices } = triangulate(rings);
   const start = w.vertexCount;
-  for (let k = 0; k < vertices.length; k += 2) w.vertex(vertices[k], y, vertices[k + 1], 0, 1, 0, tint, district);
+  for (let k = 0; k < vertices.length; k += 2) w.vertex(vertices[k], y, vertices[k + 1], 0, 1, 0, v.tint, v.district, v.accent);
   for (let t = 0; t < indices.length; t += 3) w.triangle(start + indices[t], start + indices[t + 1], start + indices[t + 2]);
 }
 
-function addPyramid(w: MeshWriter, ring: DecodedRing, cx: number, cz: number, y0: number, y1: number, tint: number, district: number): void {
+function addPyramid(w: MeshWriter, ring: DecodedRing, cx: number, cz: number, y0: number, y1: number, v: VertexTag): void {
   const n = ring.length / 2;
   for (let i = 0; i < n; i++) {
     const j = (i + 1) % n;
@@ -147,15 +154,15 @@ function addPyramid(w: MeshWriter, ring: DecodedRing, cx: number, cz: number, y0
     nx = (nx / len) * flip;
     ny = (ny / len) * flip;
     nz = (nz / len) * flip;
-    const a = w.vertex(ax, y0, az, nx, ny, nz, tint, district);
-    const b = w.vertex(bx, y0, bz, nx, ny, nz, tint, district);
-    const c = w.vertex(cx, y1, cz, nx, ny, nz, tint, district);
+    const a = w.vertex(ax, y0, az, nx, ny, nz, v.tint, v.district, v.accent);
+    const b = w.vertex(bx, y0, bz, nx, ny, nz, v.tint, v.district, v.accent);
+    const c = w.vertex(cx, y1, cz, nx, ny, nz, v.tint, v.district, v.accent);
     if (flip > 0) w.triangle(a, b, c);
     else w.triangle(a, c, b);
   }
 }
 
-function addDome(w: MeshWriter, ring: DecodedRing, cx: number, cz: number, y0: number, h: number, tint: number, district: number): void {
+function addDome(w: MeshWriter, ring: DecodedRing, cx: number, cz: number, y0: number, h: number, v: VertexTag): void {
   const n = ring.length / 2;
   const grid: number[][] = [];
   for (let s = 0; s <= DOME_STEPS; s++) {
@@ -175,7 +182,7 @@ function addDome(w: MeshWriter, ring: DecodedRing, cx: number, cz: number, y0: n
       nx /= len;
       ny /= len;
       nz /= len;
-      row.push(w.vertex(cx + rx * cos, y0 + h * sin, cz + rz * cos, nx, ny, nz, tint, district));
+      row.push(w.vertex(cx + rx * cos, y0 + h * sin, cz + rz * cos, nx, ny, nz, v.tint, v.district, v.accent));
     }
     grid.push(row);
   }

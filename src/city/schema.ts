@@ -29,6 +29,8 @@ export const AreaKind = {
   Water: 13,
   Plaza: 14,
   Bridge: 15,
+  /** Running tracks (leisure=track): terracotta. */
+  Track: 16,
 } as const;
 export type AreaKind = (typeof AreaKind)[keyof typeof AreaKind];
 
@@ -70,6 +72,14 @@ export type BuildingKind = (typeof BuildingKind)[keyof typeof BuildingKind];
 
 export const RoofShape = { Flat: 0, Pyramidal: 1, Dome: 2 } as const;
 
+/**
+ * Sparse colour accents on the white model, for quick orientation:
+ * glass curtain walls on towers, emerald glass in the Emerald Quarter,
+ * tinted roofs on schools/kindergartens and clinics/hospitals.
+ */
+export const BuildingAccent = { None: 0, Glass: 1, Emerald: 2, SchoolRoof: 3, HealthRoof: 4, Aurora: 5 } as const;
+export type BuildingAccent = (typeof BuildingAccent)[keyof typeof BuildingAccent];
+
 export const BuildingFlag = {
   /** Height was estimated from type/footprint, not tagged in OSM. */
   EstimatedHeight: 1,
@@ -110,6 +120,8 @@ export type BuildingsFile = PolygonSet & {
   flags: number[];
   /** Index into districts, 255 = outside the five case districts. */
   district: number[];
+  /** BuildingAccent per building (absent in older data = none). */
+  accent?: number[];
 };
 
 export type GroundFile = {
@@ -167,6 +179,8 @@ export type LandmarkAnchor = {
   /** Size of the oriented footprint box along / across the main axis, metres. */
   length: number;
   width: number;
+  /** Footprints of the replaced OSM elements (absolute metres) with their heights, for custom models. */
+  parts?: { ring: number[]; height: number }[];
 };
 
 export type CityManifest = {

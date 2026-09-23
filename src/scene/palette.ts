@@ -39,12 +39,13 @@ export const AREA_COLORS: Record<AreaKind, string> = {
   [AreaKind.Cemetery]: "#909c78",
   [AreaKind.Park]: "#7d924b",
   [AreaKind.Forest]: "#5c773b",
-  [AreaKind.Playground]: "#cfc2a4",
-  [AreaKind.Pitch]: "#7f9c52",
+  [AreaKind.Playground]: "#d9b683",
+  [AreaKind.Pitch]: "#6ea34a",
   [AreaKind.Parking]: "#9aa0ac",
   [AreaKind.Water]: "#8aa9c6",
   [AreaKind.Plaza]: "#d3d5d2",
   [AreaKind.Bridge]: "#d8dad8",
+  [AreaKind.Track]: "#c47b5c",
 };
 
 /** Draw order for flat ground layers (lower first). Roads come after areas. */
