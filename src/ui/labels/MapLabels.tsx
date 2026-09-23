@@ -34,6 +34,7 @@ export function MapLabels() {
             ref={(el) => bindLabel(`hotspot:${h.id}`, el, h.x, 0, h.z + h.radius * 1.02)}
             className={`hotspot-label${hovered === h.id ? " is-hovered" : ""}${visible ? "" : " is-hidden"}`}
             data-tone={h.tone}
+            data-tour={`hotspot-${h.id}`}
             onPointerEnter={() => setHovered(h.id)}
             onPointerLeave={() => setHovered(null)}
             onClick={() => selectHotspot(h.id)}

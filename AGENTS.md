@@ -11,4 +11,5 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 # Project: АКИМ · HackAlem, team Bolme
 
 - **3D city scene** (Astana 1:1 from OpenStreetMap, map/3D/drone/tour camera, "stone in the water" hotspots) and **how to plug the simulator into it**: read [docs/city-scene-guide.md](docs/city-scene-guide.md) before changing `src/scene`, `src/city` or adding simulator features. The scene is driven only through the zustand store `src/city/store.ts`.
+- **Intro + walkthrough** (`src/ui/onboarding`): new UI feature → mark its root with `data-tour="<id>"` and add a step to `src/ui/onboarding/steps.ts`. Theme tokens (warm light glass, olive `#576349`) live in `src/app/globals.css`; icons in `src/ui/icons.tsx`.
 - Case, dataset and scoring rules: [docs/case/](docs/case/). Product concept: [docs/planning/city-simulator-concept.md](docs/planning/city-simulator-concept.md).

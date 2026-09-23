@@ -7,6 +7,7 @@ import { DIRECTION_IDS, DISTRICT_IDS, MEASURE_IDS, type Choice, type DirectionId
 import { lagText, num, SHORT } from "@/sim/labels";
 import { useSimStore } from "@/sim/store";
 import { usePreview } from "@/sim/useAnalysis";
+import { Icon, MEASURE_ICONS } from "@/ui/icons";
 
 function BudgetHeader() {
   const plan = useSimStore((s) => s.plan);
@@ -16,26 +17,27 @@ function BudgetHeader() {
   const pct = Math.min(100, (preview.cost / BUDGET) * 100);
   return (
     <header className="sim-head">
-      <div className="sim-head__row">
-        <span className="sim-eyebrow">Бюджет акима · горизонт {HORIZON_QUARTERS} кварталов</span>
-        <div className="sim-toggle" role="group" aria-label="Режим отображения">
-          <button type="button" aria-pressed={!analyst} onClick={() => setAnalyst(false)} title="Результаты скрыты до подписи бюджета">
-            Аким
-          </button>
-          <button type="button" aria-pressed={analyst} onClick={() => setAnalyst(true)} title="Показывать величины эффектов и живой прогноз">
-            Аналитик
-          </button>
+      <div className="sim-toggle" role="group" aria-label="Режим отображения" data-tour="mode">
+        <button type="button" aria-pressed={!analyst} onClick={() => setAnalyst(false)} title="Результаты скрыты до подписи бюджета">
+          <Icon name="user" size={16} /> Аким
+        </button>
+        <button type="button" aria-pressed={analyst} onClick={() => setAnalyst(true)} title="Показывать величины эффектов и живой прогноз">
+          <Icon name="chart" size={16} /> Аналитик
+        </button>
+      </div>
+      <div className="sim-head__budget" data-tour="budget">
+        <h2 className="sim-head__title">Бюджет города</h2>
+        <p className="sim-head__sub">Горизонт: {HORIZON_QUARTERS} кварталов · 2 года</p>
+        <div className="sim-budget">
+          <strong>{preview.cost}</strong>
+          <span>/ {BUDGET}</span>
         </div>
-      </div>
-      <div className="sim-budget">
-        <strong>{preview.cost}</strong>
-        <span>/ {BUDGET}</span>
-        <em>
-          {plan.length} из {DECISIONS} решений · остаток {BUDGET - preview.cost}
-        </em>
-      </div>
-      <div className="sim-budget-bar" aria-hidden>
-        <span style={{ width: `${pct}%` }} />
+        <div className="sim-budget-bar" aria-hidden>
+          <span style={{ width: `${pct}%` }} />
+        </div>
+        <p className="sim-head__sub">
+          Осталось {BUDGET - preview.cost} ед. · выбрано {plan.length} из {DECISIONS}
+        </p>
       </div>
     </header>
   );
@@ -46,24 +48,30 @@ function Slots() {
   const phase = useSimStore((s) => s.phase);
   const removeChoice = useSimStore((s) => s.removeChoice);
   return (
+    <div className="sim-slots-wrap">
+    <h3 className="sim-block__title">Выбранные решения</h3>
     <ol className="sim-slots">
       {Array.from({ length: DECISIONS }, (_, i) => {
         const c = plan[i];
         if (!c) return (
           <li key={i} className="sim-slot is-empty">
-            Решение {i + 1}
+            <span className="sim-slot__num">{i + 1}</span> Свободный слот решения
           </li>
         );
         const m = MEASURES[c.measureId];
         return (
           <li key={c.measureId} className="sim-slot" style={{ "--dir": DIRECTIONS[m.direction].color } as React.CSSProperties}>
             <span className="sim-slot__id">{m.id}</span>
+            <span className="sim-slot__icon">
+              <Icon name={MEASURE_ICONS[m.id]} size={20} />
+            </span>
             <span className="sim-slot__body">
               <span className="sim-slot__title">{m.title}</span>
               <span className="sim-slot__meta">
-                {c.districtId ? DISTRICTS[c.districtId].name : "Весь город"} · {m.cost} ед. · {lagText(m.lag)}
+                {c.districtId ? DISTRICTS[c.districtId].name : "Весь город"} · {lagText(m.lag)}
               </span>
             </span>
+            <span className="sim-slot__cost">{m.cost} ед.</span>
             {phase === "plan" && (
               <button type="button" className="sim-slot__remove" onClick={() => removeChoice(c.measureId)} aria-label={`Убрать ${m.title}`}>
                 ×
@@ -73,6 +81,7 @@ function Slots() {
         );
       })}
     </ol>
+    </div>
   );
 }
 
@@ -107,7 +116,7 @@ const PRESETS: Array<{ id: string; title: string; hint: string; plan: Choice[] }
 function Presets() {
   const replacePlan = useSimStore((s) => s.replacePlan);
   return (
-    <div className="sim-presets">
+    <div className="sim-presets" data-tour="presets">
       <span className="sim-eyebrow">Быстрый старт</span>
       {PRESETS.map((p) => (
         <button key={p.id} type="button" className="sim-btn sim-btn--small sim-btn--ghost" title={p.hint} onClick={() => replacePlan(p.plan)}>
@@ -126,21 +135,21 @@ function SignBar() {
   const clearPlan = useSimStore((s) => s.clearPlan);
   if (phase === "revealed")
     return (
-      <div className="sim-sign">
-        <button type="button" className="sim-btn" onClick={edit}>
-          ← Изменить решения
+      <div className="sim-sign" data-tour="sign">
+        <button type="button" className="sim-btn sim-btn--primary" onClick={edit}>
+          <Icon name="pencil" size={16} /> Изменить решения
         </button>
-        <button type="button" className="sim-btn sim-btn--ghost" onClick={clearPlan}>
-          Новый план
+        <button type="button" className="sim-btn" onClick={clearPlan}>
+          <Icon name="plus" size={16} /> Новый план
         </button>
       </div>
     );
   const evaluation = evaluatePlan(plan);
   const reason = evaluation.ok ? null : evaluation.issues[0]?.message;
   return (
-    <div className="sim-sign">
+    <div className="sim-sign" data-tour="sign">
       <button type="button" className="sim-btn sim-btn--primary" disabled={!evaluation.ok} onClick={sign}>
-        Подписать бюджет и прожить 2 года
+        <Icon name="check" size={16} /> Подписать бюджет и прожить 2 года
       </button>
       {reason && plan.length > 0 && <p className="sim-sign__reason">{reason}</p>}
     </div>
@@ -186,6 +195,9 @@ function MeasureCard({ m }: { m: Measure }) {
         title={blocked ? issues.map((i) => i.message).join("\n") : chosen ? "Убрать из плана" : "Добавить в план"}
       >
         <span className="sim-card__top">
+          <span className="sim-card__icon">
+            <Icon name={MEASURE_ICONS[m.id]} size={18} />
+          </span>
           <span className="sim-card__id">{m.id}</span>
           <span className="sim-card__title">{m.title}</span>
           <span className="sim-card__cost">{m.cost}</span>
@@ -223,7 +235,7 @@ function Catalog() {
   const [dir, setDir] = useState<DirectionId | "all">("all");
   const measures = MEASURE_IDS.map((id) => MEASURES[id]).filter((m) => dir === "all" || m.direction === dir);
   return (
-    <div className="sim-catalog">
+    <div className="sim-catalog" data-tour="catalog">
       <div className="sim-catalog__district">
         <span className="sim-eyebrow">Районные меры — в район</span>
         <div className="sim-seg">

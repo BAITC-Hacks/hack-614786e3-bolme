@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { Onest, Unbounded } from "next/font/google";
 import "./globals.css";
 import "@/ui/sim/sim.css";
+import "@/ui/onboarding/onboarding.css";
 
 const onest = Onest({ variable: "--font-onest", subsets: ["latin", "cyrillic"], display: "swap" });
 const unbounded = Unbounded({ variable: "--font-unbounded", subsets: ["latin", "cyrillic"], weight: ["500", "700"], display: "swap" });

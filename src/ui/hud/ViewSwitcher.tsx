@@ -62,7 +62,7 @@ export function ViewSwitcher() {
   const setMode = useCityStore((s) => s.setMode);
   const backToMap = useCityStore((s) => s.backToMap);
   return (
-    <nav className="view-switcher" aria-label="Режим просмотра карты">
+    <nav className="view-switcher" aria-label="Режим просмотра карты" data-tour="views">
       {MODES.map((m) => (
         <button
           key={m.mode}

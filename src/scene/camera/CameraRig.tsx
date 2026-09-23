@@ -51,7 +51,7 @@ CameraControls.install({
 });
 
 const ACTION = CameraControls.ACTION;
-const TOUR_ORBIT_SECONDS = 6.5;
+const TOUR_ORBIT_SECONDS = 4.2;
 const DRONE_LOOK_SPEED = 0.0028;
 
 type Flight = { from: Pose; to: Pose; t: number; duration: number; bump: number; onDone?: () => void };
@@ -278,7 +278,7 @@ export function CameraRig({ manifest }: { manifest: CityManifest }) {
           if (!pose) continue;
           useCityStore.getState().setCaption(titleOf(id));
           api.startFlight(pose, {
-            duration: 4.4,
+            duration: 3.3,
             onDone: () => {
               tour.current.orbitLeft = TOUR_ORBIT_SECONDS;
             },
@@ -444,7 +444,7 @@ export function CameraRig({ manifest }: { manifest: CityManifest }) {
       stepDrone(dt);
     } else {
       if (m === "tour") {
-        controls.rotate(0.075 * dt, 0, false);
+        controls.rotate(0.12 * dt, 0, false);
         tour.current.orbitLeft -= dt;
         if (tour.current.orbitLeft <= 0 && tourNext.current) tourNext.current();
       } else if (drift.current) {

@@ -7,6 +7,7 @@ import { useCityStore } from "@/city/store";
 import { num, SHORT, signed, valueColor } from "@/sim/labels";
 import { useSimStore, type ModSettings } from "@/sim/store";
 import { usePreview } from "@/sim/useAnalysis";
+import { EventsCard } from "./EventsCard";
 import { ResultView } from "./ResultView";
 
 export function AngerGauge({ value, label }: { value: number; label: string }) {
@@ -34,7 +35,7 @@ function DistrictView() {
   const anger = baselineAnger(preview)[district];
   const here = plan.filter((c) => c.districtId === district || c.districtId === null);
   return (
-    <div className="sim-block">
+    <div className="sim-block" data-tour="district">
       <div className="sim-seg">
         {DISTRICT_IDS.map((id) => (
           <button key={id} type="button" aria-pressed={district === id} onClick={() => setDistrict(id)}>
@@ -105,7 +106,7 @@ function ModsSetup() {
   const promiseIds = useSimStore((s) => s.promiseIds);
   const togglePromise = useSimStore((s) => s.togglePromise);
   return (
-    <div className="sim-block">
+    <div className="sim-block" data-tour="mods">
       <h3 className="sim-block__title">
         Моды города <span>не меняют официальный Score</span>
       </h3>
@@ -141,7 +142,7 @@ function CityOverview() {
   const preview = usePreview();
   const baseCrit = DISTRICT_IDS.flatMap((d) => INDICATOR_IDS.filter((k) => DISTRICTS[d].baseline[k] < CRITICAL_THRESHOLD).map((k) => `${DISTRICTS[d].name}: ${SHORT[k]} ${DISTRICTS[d].baseline[k]}`));
   return (
-    <div className="sim-block sim-overview">
+    <div className="sim-block sim-overview" data-tour="score">
       <div>
         <span className="sim-eyebrow">Astana QoL Score сейчас</span>
         <strong className="sim-overview__score">{num(preview.baselineScore)}</strong>
@@ -157,6 +158,7 @@ export function InfoPanel() {
   const phase = useSimStore((s) => s.phase);
   return (
     <section className="sim-panel sim-panel--right" aria-label="Город и результаты">
+      <EventsCard />
       {phase === "plan" ? (
         <>
           <CityOverview />

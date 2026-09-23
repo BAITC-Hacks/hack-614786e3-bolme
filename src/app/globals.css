@@ -2,16 +2,24 @@
 
 /* ------------------------------------------------------------ tokens --- */
 :root {
-  --color-ink: oklch(21% 0.012 250);
-  --color-ink-soft: oklch(38% 0.012 250);
-  --color-paper: oklch(95% 0.006 230);
-  --color-glass: oklch(20% 0.015 250 / 0.72);
-  --color-glass-strong: oklch(17% 0.015 250 / 0.86);
-  --color-glass-line: oklch(100% 0 0 / 0.12);
-  --color-on-glass: oklch(97% 0.005 240);
-  --color-on-glass-soft: oklch(80% 0.01 240);
-  --color-accent: oklch(78% 0.13 185);
-  --color-accent-ink: oklch(24% 0.05 190);
+  /* Warm atlas palette: paper #F3F0E8, card #FFFDF8, ink #292B26, olive #576349. */
+  --color-ink: #292b26;
+  --color-ink-soft: #62655b;
+  --color-paper: #f3f0e8;
+  --color-card: #fffdf8;
+  --color-glass: rgb(255 253 248 / 0.66);
+  --color-glass-strong: rgb(255 253 248 / 0.86);
+  --color-glass-line: rgb(41 43 38 / 0.1);
+  --color-on-glass: #292b26;
+  --color-on-glass-soft: #62655b;
+  --color-accent: #576349;
+  --color-accent-ink: #fffdf8;
+  --color-accent-soft: rgb(87 99 73 / 0.12);
+  --color-critical: #b4472f;
+  --color-warning: #b0681a;
+  --color-positive: #4f7a3a;
+  --tint-1: rgb(41 43 38 / 0.05);
+  --tint-2: rgb(41 43 38 / 0.09);
 
   --font-ui: var(--font-onest), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-unbounded), var(--font-onest), ui-sans-serif, sans-serif;
@@ -22,11 +30,12 @@
   --text-title: clamp(1.25rem, 1rem + 1vw, 1.7rem);
   --text-cinema: clamp(2rem, 1.2rem + 3.6vw, 4.2rem);
 
-  --radius-panel: 14px;
+  --radius-panel: 20px;
+  --radius-card: 14px;
   --radius-chip: 999px;
   --gap-edge: clamp(12px, 1.6vw, 22px);
-  --blur: saturate(140%) blur(14px);
-  --shadow-panel: 0 12px 40px -12px oklch(20% 0.02 250 / 0.45), 0 1px 0 oklch(100% 0 0 / 0.06) inset;
+  --blur: saturate(170%) blur(22px);
+  --shadow-panel: 0 18px 50px -20px rgb(41 43 38 / 0.38), 0 2px 6px -2px rgb(41 43 38 / 0.12), inset 0 1px 0 rgb(255 255 255 / 0.75);
 
   --duration-fast: 160ms;
   --duration-normal: 320ms;
@@ -151,7 +160,7 @@ kbd {
 
 .view-switcher__item:hover {
   color: var(--color-on-glass);
-  background: oklch(100% 0 0 / 0.08);
+  background: rgb(41 43 38 / 0.08);
 }
 
 .view-switcher__item:active {
@@ -161,7 +170,7 @@ kbd {
 .view-switcher__item[aria-pressed="true"] {
   background: var(--color-accent);
   color: var(--color-accent-ink);
-  box-shadow: 0 6px 18px -6px oklch(78% 0.13 185 / 0.7);
+  box-shadow: 0 6px 18px -6px rgb(87 99 73 / 0.45);
 }
 
 .view-switcher__icon svg {
@@ -221,14 +230,14 @@ kbd {
   padding: 8px 12px;
   border-radius: 10px;
   border: 1px solid var(--color-glass-line);
-  background: oklch(100% 0 0 / 0.06);
+  background: rgb(41 43 38 / 0.06);
   color: var(--color-on-glass);
   font-size: var(--text-sm);
   transition: background var(--duration-fast) ease;
 }
 
 .focus-card__back:hover {
-  background: oklch(100% 0 0 / 0.14);
+  background: rgb(41 43 38 / 0.14);
 }
 
 .focus-card__back kbd {
@@ -271,13 +280,13 @@ kbd {
 }
 
 .landmark-menu__item:hover {
-  background: oklch(100% 0 0 / 0.08);
+  background: rgb(41 43 38 / 0.08);
   color: var(--color-on-glass);
 }
 
 .landmark-menu__item[aria-pressed="true"] {
   color: var(--color-accent);
-  background: oklch(78% 0.13 185 / 0.12);
+  background: rgb(87 99 73 / 0.12);
 }
 
 /* ------------------------------------------------------------- footer --- */
@@ -304,7 +313,7 @@ kbd {
   margin: 0;
   padding: 9px 14px;
   list-style: none;
-  border-radius: 12px;
+  border-radius: var(--radius-chip);
   font-size: var(--text-xs);
   color: var(--color-on-glass-soft);
 }
@@ -312,9 +321,9 @@ kbd {
 .attribution {
   font-size: 0.68rem;
   color: var(--color-ink-soft);
-  background: oklch(100% 0 0 / 0.6);
-  padding: 4px 8px;
-  border-radius: 6px;
+  background: var(--color-glass-strong);
+  padding: 4px 10px;
+  border-radius: var(--radius-chip);
   text-decoration: none;
   white-space: nowrap;
 }
@@ -357,7 +366,7 @@ kbd {
   color: var(--color-ink);
   padding: 3px 10px;
   border-radius: var(--radius-chip);
-  background: oklch(100% 0 0 / 0.72);
+  background: rgb(255 253 248 / 0.8);
 }
 
 .cinema-caption__title {
@@ -366,7 +375,7 @@ kbd {
   font-size: var(--text-cinema);
   color: var(--color-ink);
   letter-spacing: -0.01em;
-  text-shadow: 0 2px 24px oklch(100% 0 0 / 0.8);
+  text-shadow: 0 2px 24px rgb(255 253 248 / 0.9), 0 0 2px rgb(255 253 248 / 0.8);
 }
 
 @keyframes caption-in {
@@ -405,8 +414,10 @@ kbd {
   align-items: center;
   gap: 1px;
   padding: 6px 11px 7px;
-  border-radius: 10px;
+  border-radius: var(--radius-card);
   background: var(--color-glass-strong);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
   color: var(--color-on-glass);
   white-space: nowrap;
   box-shadow: var(--shadow-panel);
@@ -423,7 +434,7 @@ kbd {
 }
 
 .hotspot-label.is-hovered {
-  background: oklch(14% 0.015 250 / 0.94);
+  background: rgb(255 253 248 / 0.98);
 }
 
 .hotspot-label__title {
@@ -439,16 +450,16 @@ kbd {
 }
 
 .hotspot-label[data-tone="critical"] .hotspot-label__title {
-  color: #ff8a70;
+  color: #b4472f;
 }
 .hotspot-label[data-tone="warning"] .hotspot-label__title {
-  color: #ffc766;
+  color: #c1922e;
 }
 .hotspot-label[data-tone="info"] .hotspot-label__title {
-  color: #6fe6da;
+  color: #3b6f7a;
 }
 .hotspot-label[data-tone="positive"] .hotspot-label__title {
-  color: #8ff0a4;
+  color: #4f7a3a;
 }
 
 /* ---------------------------------------------------- district labels --- */
@@ -459,15 +470,17 @@ kbd {
   align-items: center;
   padding: 4px 10px;
   border: 0;
-  border-radius: 8px;
-  background: oklch(100% 0 0 / 0.72);
+  border-radius: var(--radius-chip);
+  background: var(--color-glass-strong);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
   color: var(--color-ink);
   box-shadow: 0 4px 14px -6px oklch(20% 0.02 250 / 0.4);
   transition: background var(--duration-fast) ease;
 }
 
 .district-label:hover {
-  background: #fff;
+  background: var(--color-card);
 }
 
 .district-label__name {

@@ -22,8 +22,8 @@ export const lagText = (lag: number) => `с ${lag + 1}-го квартала`;
 
 /** Colour for a 0–100 district/indicator value (red → amber → green). */
 export function valueColor(v: number): string {
-  if (v < 40) return "#ff7a66";
-  if (v < 50) return "#ffb25c";
-  if (v < 60) return "#e8d86a";
-  return "#7fe0a0";
+  if (v < 40) return "#c4503a";
+  if (v < 50) return "#d08a2e";
+  if (v < 60) return "#c2ad4c";
+  return "#6f9a52";
 }

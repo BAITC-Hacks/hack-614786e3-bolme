@@ -1,0 +1,35 @@
+/**
+ * Onboarding state: cinematic intro over the flyover → spotlight walkthrough → play.
+ * Steps live in ./steps.ts; add a step there when a new feature ships.
+ */
+import { create } from "zustand";
+import { useCityStore } from "@/city/store";
+
+export type OnboardingStage = "intro" | "guide" | "done";
+
+type OnboardingState = {
+  stage: OnboardingStage;
+  step: number;
+  /** Intro → guide: land on the map and start the walkthrough. */
+  startGuide: () => void;
+  /** Leave the intro or the guide and play. */
+  finish: () => void;
+  next: (total: number) => void;
+  back: () => void;
+};
+
+export const useOnboardingStore = create<OnboardingState>()((set) => ({
+  stage: "intro",
+  step: 0,
+  startGuide: () => {
+    useCityStore.getState().backToMap();
+    set({ stage: "guide", step: 0 });
+  },
+  finish: () => {
+    const city = useCityStore.getState();
+    if (city.mode === "tour") city.backToMap();
+    set({ stage: "done", step: 0 });
+  },
+  next: (total) => set((s) => (s.step + 1 >= total ? { stage: "done", step: 0 } : { step: s.step + 1 })),
+  back: () => set((s) => ({ step: Math.max(0, s.step - 1) })),
+}));

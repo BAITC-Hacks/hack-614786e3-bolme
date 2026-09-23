@@ -7,6 +7,9 @@ import { TONE_COLORS } from "@/scene/markers/Ripples";
 import { fpsState } from "@/scene/fpsState";
 import { ViewSwitcher } from "./ViewSwitcher";
 import { SimHud } from "@/ui/sim/SimHud";
+import { Intro } from "@/ui/onboarding/Intro";
+import { useOnboardingStore } from "@/ui/onboarding/store";
+import { HelpButton, Walkthrough } from "@/ui/onboarding/Walkthrough";
 
 const HINTS: Record<ViewMode, string[]> = {
   map: ["Тяни — сдвиг", "Колесо — масштаб", "ПКМ — поворот", "Клик по кругу — пролёт в 3D"],
@@ -113,7 +116,15 @@ export function Hud() {
   const mode = useCityStore((s) => s.mode);
   const manifest = useCityStore((s) => s.manifest);
   const status = useCityStore((s) => s.status);
+  const intro = useOnboardingStore((s) => s.stage === "intro");
   if (status !== "ready") return null;
+  if (intro)
+    return (
+      <div className="hud">
+        <Caption />
+        <Intro />
+      </div>
+    );
   return (
     <div className="hud">
       <header className="brand">
@@ -137,7 +148,9 @@ export function Hud() {
           © OpenStreetMap contributors · ODbL
         </a>
       </footer>
+      <HelpButton />
       <DebugStats />
+      <Walkthrough />
     </div>
   );
 }
