@@ -50,6 +50,7 @@ const PATHS = {
       <path d="M12 7.5V13M12 16.5h.01" />
     </>
   ),
+  bell: <path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15L6 16ZM10 20.5a2 2 0 0 0 4 0" />,
   help: (
     <>
       <circle cx="12" cy="12" r="9" />

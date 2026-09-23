@@ -10,6 +10,7 @@ import { SimHud } from "@/ui/sim/SimHud";
 import { Intro } from "@/ui/onboarding/Intro";
 import { useOnboardingStore } from "@/ui/onboarding/store";
 import { HelpButton, Walkthrough } from "@/ui/onboarding/Walkthrough";
+import { EventsBell } from "@/ui/sim/EventsCard";
 
 const HINTS: Record<ViewMode, string[]> = {
   map: ["Тяни — сдвиг", "Колесо — масштаб", "ПКМ — поворот", "Клик по кругу — пролёт в 3D"],
@@ -114,14 +115,12 @@ function DebugStats() {
 
 export function Hud() {
   const mode = useCityStore((s) => s.mode);
-  const manifest = useCityStore((s) => s.manifest);
   const status = useCityStore((s) => s.status);
   const intro = useOnboardingStore((s) => s.stage === "intro");
   if (status !== "ready") return null;
   if (intro)
     return (
       <div className="hud">
-        <Caption />
         <Intro />
       </div>
     );
@@ -129,26 +128,25 @@ export function Hud() {
     <div className="hud">
       <header className="brand">
         <span className="brand__mark">АКИМ</span>
-        <span className="brand__meta">
-          Астана · {manifest?.counts.buildings.toLocaleString("ru-RU")} зданий по OpenStreetMap
-        </span>
       </header>
       <ViewSwitcher />
       <SimHud />
       <FocusCard />
       <LandmarkMenu />
       <Caption />
-      <footer className="hud-footer">
-        <ul className="controls-hint" aria-label="Управление">
-          {HINTS[mode].map((h) => (
-            <li key={h}>{h}</li>
-          ))}
-        </ul>
-        <a className="attribution" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">
-          © OpenStreetMap contributors · ODbL
-        </a>
-      </footer>
-      <HelpButton />
+      {mode !== "map" && (
+        <footer className="hud-footer">
+          <ul className="controls-hint" aria-label="Управление">
+            {HINTS[mode].map((h) => (
+              <li key={h}>{h}</li>
+            ))}
+          </ul>
+        </footer>
+      )}
+      <div className="top-actions">
+        <EventsBell />
+        <HelpButton />
+      </div>
       <DebugStats />
       <Walkthrough />
     </div>

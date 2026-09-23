@@ -32,6 +32,7 @@ function MiniBar() {
 export function SimHud() {
   const mode = useCityStore((s) => s.mode);
   const revealing = useSimStore((s) => s.revealStep >= 0);
+  const infoOpen = useSimStore((s) => s.infoOpen);
   return (
     <>
       <SimBridge />
@@ -40,7 +41,7 @@ export function SimHud() {
       ) : mode === "map" ? (
         <>
           <PlanPanel />
-          <InfoPanel />
+          {infoOpen && <InfoPanel />}
         </>
       ) : (
         <MiniBar />

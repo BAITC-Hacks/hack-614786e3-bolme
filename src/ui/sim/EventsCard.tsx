@@ -77,6 +77,35 @@ function useRows(): Row[] {
   return rows;
 }
 
+/** Top-right bell: toggles the right panel; the badge keeps counting events while it is collapsed. */
+export function EventsBell() {
+  const mode = useCityStore((s) => s.mode);
+  const revealing = useSimStore((s) => s.revealStep >= 0);
+  const open = useSimStore((s) => s.infoOpen);
+  const setOpen = useSimStore((s) => s.setInfoOpen);
+  const rows = useRows();
+  if (mode !== "map" || revealing) return null;
+  const urgent = rows.some((r) => r.level === "high");
+  return (
+    <button
+      type="button"
+      className="events-bell"
+      data-tour="events-bell"
+      aria-pressed={open}
+      onClick={() => setOpen(!open)}
+      title={open ? "Свернуть панель — события останутся в колокольчике" : "Показать события и состояние города"}
+    >
+      <Icon name="bell" size={18} />
+      <span>{open ? "Свернуть" : "События"}</span>
+      {rows.length > 0 && (
+        <b key={rows.length} className={`events-bell__badge${urgent ? " is-urgent" : ""}`}>
+          {rows.length}
+        </b>
+      )}
+    </button>
+  );
+}
+
 export function EventsCard() {
   const [open, setOpen] = useState(true);
   const selectHotspot = useCityStore((s) => s.selectHotspot);

@@ -180,6 +180,7 @@ kbd {
 }
 
 .view-switcher__key {
+  display: none;
   font-size: 0.64rem;
   padding: 1px 5px;
   border-radius: 5px;
@@ -347,7 +348,7 @@ kbd {
 .cinema-caption {
   position: absolute;
   left: 50%;
-  bottom: 18vh;
+  bottom: calc(var(--gap-edge) + 64px);
   translate: -50% 0;
   display: flex;
   flex-direction: column;
@@ -372,9 +373,14 @@ kbd {
 .cinema-caption__title {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: var(--text-cinema);
+  font-size: clamp(1rem, 0.85rem + 0.6vw, 1.35rem);
   color: var(--color-ink);
-  letter-spacing: -0.01em;
+  letter-spacing: 0;
+  padding: 6px 16px;
+  border-radius: var(--radius-chip);
+  background: rgb(255 253 248 / 0.8);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
   text-shadow: 0 2px 24px rgb(255 253 248 / 0.9), 0 0 2px rgb(255 253 248 / 0.8);
 }
 
@@ -408,63 +414,172 @@ kbd {
   pointer-events: none;
 }
 
-.hotspot-label {
+/* Compact chip under each ring; details open in a card on click. */
+.hotspot-pin {
+  --tone: var(--color-accent);
+  translate: -50% 8px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1px;
-  padding: 6px 11px 7px;
-  border-radius: var(--radius-card);
+  transition: opacity var(--duration-normal) ease;
+}
+
+.hotspot-pin[data-tone="critical"] {
+  --tone: var(--color-critical);
+}
+.hotspot-pin[data-tone="warning"] {
+  --tone: var(--color-warning);
+}
+.hotspot-pin[data-tone="info"] {
+  --tone: #3b6f7a;
+}
+.hotspot-pin[data-tone="positive"] {
+  --tone: var(--color-positive);
+}
+
+.hotspot-pin.is-open {
+  z-index: 5;
+}
+
+.hotspot-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px 5px 8px;
+  border: 1px solid var(--color-glass-line);
+  border-radius: var(--radius-chip);
   background: var(--color-glass-strong);
   backdrop-filter: var(--blur);
   -webkit-backdrop-filter: var(--blur);
-  color: var(--color-on-glass);
+  box-shadow: 0 6px 16px -8px rgb(41 43 38 / 0.45);
+  color: var(--color-ink);
   white-space: nowrap;
-  box-shadow: var(--shadow-panel);
-  border: 1px solid var(--color-glass-line);
   transition:
-    opacity var(--duration-normal) ease,
-    background var(--duration-fast) ease;
+    background var(--duration-fast) ease,
+    transform var(--duration-fast) var(--ease-out-expo);
 }
 
-/* The inner offset keeps the label hanging below the ring's south edge. */
-.hotspot-label,
-.district-label {
-  translate: -50% 10px;
+.hotspot-chip:hover,
+.hotspot-chip.is-hovered,
+.hotspot-chip[aria-expanded="true"] {
+  background: var(--color-card);
+  transform: translateY(-1px);
 }
 
-.hotspot-label.is-hovered {
-  background: rgb(255 253 248 / 0.98);
+.hotspot-chip__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--tone);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--tone) 22%, transparent);
 }
 
-.hotspot-label__title {
+.hotspot-chip__title {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 0.8rem;
+  font-size: 0.72rem;
   letter-spacing: 0.04em;
 }
 
-.hotspot-label__caption {
-  font-size: 0.68rem;
-  color: var(--color-on-glass-soft);
+.hotspot-chip--event {
+  padding: 6px;
+  border-color: transparent;
+  background: var(--tone);
+  color: var(--color-card);
 }
 
-.hotspot-label[data-tone="critical"] .hotspot-label__title {
-  color: #b4472f;
+.hotspot-chip--event:hover,
+.hotspot-chip--event.is-hovered,
+.hotspot-chip--event[aria-expanded="true"] {
+  background: var(--tone);
+  transform: scale(1.08);
 }
-.hotspot-label[data-tone="warning"] .hotspot-label__title {
-  color: #c1922e;
+
+.hotspot-pop {
+  position: absolute;
+  top: calc(100% + 8px);
+  width: 250px;
+  padding: 12px 14px 12px;
+  border-radius: 18px;
+  border: 1px solid rgb(255 255 255 / 0.7);
+  border-top: 3px solid var(--tone);
+  background: rgb(255 253 248 / 0.94);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  box-shadow: 0 20px 44px -18px rgb(33 35 30 / 0.55);
+  color: var(--color-ink);
+  text-align: left;
+  white-space: normal;
+  animation: card-in var(--duration-normal) var(--ease-out-expo);
 }
-.hotspot-label[data-tone="info"] .hotspot-label__title {
-  color: #3b6f7a;
+
+.hotspot-pop__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
-.hotspot-label[data-tone="positive"] .hotspot-label__title {
-  color: #4f7a3a;
+
+.hotspot-pop__eyebrow {
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--tone);
+}
+
+.hotspot-pop__close {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--color-ink-soft);
+}
+
+.hotspot-pop__close:hover {
+  background: var(--tint-2);
+}
+
+.hotspot-pop__title {
+  display: block;
+  margin-top: 4px;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  line-height: 1.25;
+}
+
+.hotspot-pop__caption {
+  margin: 6px 0 0;
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  color: var(--color-ink-soft);
+}
+
+.hotspot-pop__go {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 7px 14px;
+  border: 0;
+  border-radius: var(--radius-chip);
+  background: var(--color-accent);
+  color: var(--color-accent-ink);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  transition: background var(--duration-fast) ease;
+}
+
+.hotspot-pop__go:hover {
+  background: #4a5540;
 }
 
 /* ---------------------------------------------------- district labels --- */
 .district-label {
   translate: -50% -50%;
+  padding: 5px 12px !important;
   display: flex;
   flex-direction: column;
   align-items: center;

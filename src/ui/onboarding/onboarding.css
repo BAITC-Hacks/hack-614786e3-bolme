@@ -318,10 +318,17 @@
 }
 
 /* -------------------------------------------------------- help button --- */
-.help-button {
+.top-actions {
   position: absolute;
   top: var(--gap-edge);
   right: var(--gap-edge);
+  display: flex;
+  gap: 8px;
+}
+
+.help-button,
+.events-bell {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -340,16 +347,53 @@
     transform var(--duration-fast) var(--ease-out-expo);
 }
 
-.help-button:hover {
+.help-button:hover,
+.events-bell:hover {
   background: var(--color-glass-strong);
 }
 
-.help-button:active {
+.help-button:active,
+.events-bell:active {
   transform: scale(0.96);
 }
 
+.events-bell[aria-pressed="false"] {
+  background: var(--color-accent);
+  border-color: transparent;
+  color: var(--color-accent-ink);
+}
+
+.events-bell__badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  display: grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: var(--radius-chip);
+  background: var(--color-accent);
+  color: var(--color-accent-ink);
+  font-size: 0.68rem;
+  font-weight: 700;
+  box-shadow: 0 0 0 2px var(--color-card);
+  animation: badge-pop 520ms var(--ease-out-expo);
+}
+
+.events-bell__badge.is-urgent {
+  background: var(--color-critical);
+}
+
+@keyframes badge-pop {
+  from {
+    transform: scale(0.4);
+  }
+}
+
 @media (max-width: 720px) {
-  .help-button span {
+  .help-button span,
+  .events-bell span {
     display: none;
   }
   .intro {

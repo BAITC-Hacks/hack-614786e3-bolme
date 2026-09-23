@@ -42,6 +42,9 @@ type SimState = {
   toast: { text: string; tone: "error" | "info" } | null;
   /** Printable one-page brief overlay. */
   briefOpen: boolean;
+  /** Right panel (events, city, results); collapsed it leaves the events bell. */
+  infoOpen: boolean;
+  setInfoOpen: (open: boolean) => void;
   setBriefOpen: (open: boolean) => void;
   /** Cinematic reveal after signing: index of the current shot, -1 = not playing. */
   revealStep: number;
@@ -79,6 +82,8 @@ export const useSimStore = create<SimState>()((set) => ({
   report: { status: "idle" },
   toast: null,
   briefOpen: false,
+  infoOpen: true,
+  setInfoOpen: (infoOpen) => set({ infoOpen }),
   setBriefOpen: (briefOpen) => set({ briefOpen }),
   revealStep: -1,
   setRevealStep: (revealStep) => set({ revealStep }),

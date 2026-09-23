@@ -244,7 +244,8 @@ export function CameraRig({ manifest }: { manifest: CityManifest }) {
     prevMode.current = mode;
     modeRef.current = mode;
     const store = useCityStore.getState();
-    if (prev === null) return; // initial mount handled above
+    // Initial mount is handled above, except a tour requested before the rig existed (intro screen).
+    if (prev === null && mode !== "tour") return;
     if (prev === "map" && mode !== "map" && !flight.current) mapPose.current = api.readPose();
     if (prev === "drone" && mode !== "drone") {
       api.syncFromCamera();
