@@ -1,0 +1,100 @@
+{
+  "checkedOn": "2026-09-23",
+  "source": "https://api.openstreetmap.org/api/0.6/map.json?bbox=71.420,51.123,71.438,51.132",
+  "bbox": [
+    71.42,
+    51.123,
+    71.438,
+    51.132
+  ],
+  "countingNote": "Counts are tagged OSM elements in the map API response, not deduplicated physical buildings. Ways may extend beyond the bbox. Parts are counted separately; missing height on an outline does not imply that all its parts lack heights.",
+  "buildingElements": 118,
+  "buildingElementTypes": {
+    "way": 105,
+    "relation": 13
+  },
+  "buildingWithHeight": 2,
+  "buildingWithLevels": 66,
+  "buildingWithHeightOrLevels": 66,
+  "buildingPartElements": 46,
+  "partsWithHeight": 5,
+  "partsWithLevels": 34,
+  "partsWithHeightOrLevels": 34,
+  "landmarkTags": [
+    {
+      "type": "node",
+      "id": 2636792628,
+      "tags": {
+        "name": "Монумент Байтерек"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13081694260,
+      "tags": {
+        "name": "Бәйтерек",
+        "name:en": "Baiterek",
+        "name:ru": "Байтерек"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13612447986,
+      "tags": {
+        "name": "Бәйтерек",
+        "name:en": "Baiterek",
+        "name:ru": "Байтерек"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13612447987,
+      "tags": {
+        "name": "Бәйтерек",
+        "name:en": "Baiterek",
+        "name:ru": "Байтерек"
+      }
+    },
+    {
+      "type": "way",
+      "id": 230401644,
+      "tags": {
+        "building:levels": "30",
+        "building:part": "yes",
+        "name": "Байтерек",
+        "name:en": "Baiterek Tower",
+        "roof:shape": "orb"
+      }
+    },
+    {
+      "type": "way",
+      "id": 230401645,
+      "tags": {
+        "building": "yes",
+        "building:levels": "27",
+        "name": "Бәйтерек",
+        "name:en": "Bayterek",
+        "name:ru": "Байтерек"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1547354202,
+      "tags": {
+        "building": "train_station",
+        "building:levels": "3",
+        "name": "Бәйтерек",
+        "name:en": "Baiterek",
+        "name:ru": "Байтерек"
+      }
+    },
+    {
+      "type": "relation",
+      "id": 20279183,
+      "tags": {
+        "name": "Бәйтерек",
+        "name:en": "Baiterek"
+      }
+    }
+  ]
+}
