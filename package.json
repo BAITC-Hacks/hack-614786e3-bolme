@@ -11,6 +11,7 @@
     "city:fetch": "tsx scripts/city/fetch-osm.ts",
     "city:build": "tsx scripts/city/build-city.ts",
     "sim:solve": "tsx scripts/sim/solve.ts",
+    "sim:verify": "tsx scripts/sim/verify-case.ts",
     "test": "tsx --test src/domain/*.test.ts"
   },
   "dependencies": {
